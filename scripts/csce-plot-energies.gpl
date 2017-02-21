@@ -1,0 +1,229 @@
+#!/usr/bin/env gnuplot
+
+set style line  1 lt 1 lw 3.0 pt 7 ps 0.5 lc rgb "black"
+set style line  2 lt 1 lw 3.0 pt 5 ps 0.5 lc rgb "red"
+set style line  3 lt 1 lw 3.0 pt 9 ps 0.5 lc rgb "blue"
+set style line  4 lt 1 lw 3.0 pt 7 ps 0.5 lc rgb "forest-green"
+set style line  5 lt 1 lw 3.0 pt 7 ps 0.5 lc rgb "orange"
+
+set style line 11 lt 2 lw 4.0 pt 7 ps 0.5 lc rgb "black"
+set style line 12 lt 2 lw 4.0 pt 5 ps 0.5 lc rgb "red"
+set style line 13 lt 2 lw 4.0 pt 9 ps 0.5 lc rgb "blue"
+set style line 14 lt 2 lw 4.0 pt 7 ps 0.5 lc rgb "forest-green"
+set style line 15 lt 2 lw 4.0 pt 7 ps 0.5 lc rgb "orange"
+
+set style line 10 lt 1 lw 3.0 lc rgb "black"
+
+set style increment user
+
+set terminal pdf enhanced dashed size 3.5, 3.5 font "Helvetica,12"
+
+set border ls 10
+set mxtics 2
+set mytics 2
+
+set size square
+set key top left Left tc variable
+
+set xlabel "DFT energy (eV)"
+set ylabel "CE energy (eV)"
+
+#----------------------------------------------------------------------#
+#            gather some information from the output files             #
+#----------------------------------------------------------------------#
+
+# check, which output files exist
+has_energies = `if [ -f ce-energies.dat ]; then echo 1; else echo 0; fi`
+ignored = `if [ -f ce-energies.dat-ignored ]; then echo 1; else echo 0; fi`
+has_hull = `if [ -f ce-hull.dat ]; then echo 1; else echo 0; fi`
+cv_score = `if [ -f cv-energies.dat ]; then echo 1; else echo 0; fi`
+
+min(a,b) = (b<a) ? b : a
+max(a,b) = (b>a) ? b : a
+
+# total energy
+stats 'ce-energies.dat' u 3:5 nooutput
+E_min = min(STATS_min_x, STATS_min_y)
+E_max = max(STATS_max_x, STATS_max_y)
+if (ignored == 1) {
+    stats 'ce-energies.dat-ignored' u 3:5 nooutput
+    E_min = min(E_min, STATS_min_x)
+    E_min = min(E_min, STATS_min_y)
+    E_max = max(E_max, STATS_max_x)
+    E_max = max(E_max, STATS_max_y)
+}
+
+# energy above hull
+stats 'ce-energies.dat' u 8 nooutput
+Eah_min = STATS_min
+Eah_max = STATS_max
+
+# dimension (number of concentrations) of the CE
+ce_dim = `awk '(NR==2){print NF - 7}' ce-energies.dat`
+
+# number of clusters
+N1=`if [ -f ecis.dat ]; then echo "'"; sed '/0.0000000000/d'  ecis.dat | wc -l; echo "'"; else echo "'many'"; fi`
+N2=`if [ -f ecis.dat-simp ]; then echo "'"; sed '/0.0000000000/d' ecis.dat-simp | wc -l; echo "'"; else echo "'fewer'"; fi`
+
+#----------------------------------------------------------------------#
+#  Correlation of CE energy with reference for low-energy structures   #
+#----------------------------------------------------------------------#
+
+if (has_energies == 1) {
+    set output "graph-ce-energies-zoom.pdf"
+
+    set xtics 0.04 format "%.2f"
+    set ytics 0.04 format "%.2f"
+
+    E_min = floor(E_min*100.0)/100.0
+    set xrange [E_min:E_min+0.2]
+    set yrange [E_min:E_min+0.2]
+
+    if (ignored == 1) {
+        plot "ce-energies.dat"         u (column(2+ce_dim)):(column(3+ce_dim)):1 w labels tc ls 1 t N1." clusters", \
+             "ce-energies.dat"         u (column(2+ce_dim)):(column(4+ce_dim)):1 w labels tc ls 2 t N2." clusters", \
+             "ce-energies.dat-ignored" u (column(2+ce_dim)):(column(4+ce_dim)):1 w labels tc ls 3 t "ignored structures", \
+             x w l ls 1 t ""
+    } else {
+        plot "ce-energies.dat"         u (column(2+ce_dim)):(column(3+ce_dim)):1 w labels tc ls 1 t N1." clusters", \
+             "ce-energies.dat"         u (column(2+ce_dim)):(column(4+ce_dim)):1 w labels tc ls 2 t N2." clusters", \
+             x w l ls 1 t ""
+    }
+}
+
+#----------------------------------------------------------------------#
+#      Correlation of CE energy with reference for all structures      #
+#----------------------------------------------------------------------#
+
+if (has_energies == 1) {
+    set output "graph-ce-energies.pdf"
+
+    set xtics 0.2 format "%.1f"
+    set ytics 0.2 format "%.1f"
+
+    E_min = floor(E_min*10.0)/10.0
+    E_max = ceil(E_max*10.0)/10.0
+    set xrange [E_min:E_max]
+    set yrange [E_min:E_max]
+
+    if (ignored == 1) {
+        plot "ce-energies.dat"         u (column(2+ce_dim)):(column(3+ce_dim)):1 w labels tc ls 1 t N1." clusters", \
+             "ce-energies.dat"         u (column(2+ce_dim)):(column(4+ce_dim)):1 w labels tc ls 2 t N2." clusters", \
+             "ce-energies.dat-ignored" u (column(2+ce_dim)):(column(4+ce_dim)):1 w labels tc ls 3 t "ignored structures", \
+             x w l ls 1 t ""
+    } else {
+        plot "ce-energies.dat"         u (column(2+ce_dim)):(column(3+ce_dim)):1 w labels tc ls 1 t N1." clusters", \
+             "ce-energies.dat"         u (column(2+ce_dim)):(column(4+ce_dim)):1 w labels tc ls 2 t N2." clusters", \
+             x w l ls 1 t ""
+    }
+}
+
+#----------------------------------------------------------------------#
+#                     Errors vs. energy above hull                     #
+#----------------------------------------------------------------------#
+
+if (has_energies == 1) {
+    set output "graph-ce-errors.pdf"
+
+    set key bottom left width 1.0 samplen -1.0 spacing 1.2
+    set xlabel "CE error (meV)"
+    set ylabel "Energy above hull (meV)"
+
+    set xrange [*:*]
+    set yrange [*:*]
+    ymax = 200.0
+    stats [0:ymax] 'ce-energies.dat' u (column(7+ce_dim)*1000):(column(6+ce_dim)*1000) nooutput
+    xmin = floor(STATS_min_y/10.0)*10.0
+    xmax = ceil(STATS_max_y/10.0)*10.0
+    xmin = (xmin <= -ymax) ? xmin : -ymax
+    xmax = (xmax >= ymax) ? xmax : ymax
+    RMSE = STATS_stddev_y + abs(STATS_mean_y)
+    set yrange [0:ymax]
+    set xrange [xmin:xmax]
+    set trange [0:ymax]
+
+    set xtics auto format "%.0f"
+    set ytics auto format "%.0f"
+
+    set parametric
+
+    if (ignored == 1) {
+        plot 0, t     w l ls 1 t "", \
+             "ce-energies.dat"         u (column(6+ce_dim)*1000):(column(7+ce_dim)*1000):1 w labels tc ls 2 t N2." clusters", \
+             "ce-energies.dat-ignored" u (column(6+ce_dim)*1000):(column(7+ce_dim)*1000):1 w labels tc ls 3 t "ignored structures", \
+             -RMSE, t w l ls 14 t "RMSE", \
+             RMSE, t  w l ls 14 notitle, \
+             t, t     w l ls  5 notitle, \
+             -t, t    w l ls  5 notitle
+
+    } else {
+        plot 0, t     w l ls 1 t "", \
+             "ce-energies.dat"         u (column(6+ce_dim)*1000):(column(7+ce_dim)*1000):1 w labels tc ls 2 t N2." clusters", \
+             -RMSE, t w l ls 14 t "RMSE", \
+             RMSE, t  w l ls 14 notitle, \
+             t, t     w l ls  5 notitle, \
+             -t, t    w l ls  5 notitle
+    }
+
+    unset parametric
+
+}
+
+#----------------------------------------------------------------------#
+#                      Formation energy hull                           #
+#----------------------------------------------------------------------#
+
+if (has_hull == 1) {
+    set terminal pdf enhanced dashed size 4.0, 3.0 font "Helvetica,12"
+    set output "graph-ce-hull.pdf"
+    set size nosquare
+
+    set xlabel "Concentration"
+    set ylabel "Energy (meV)"
+    set xtics auto format "%g"
+    set ytics auto format "%g"
+    set xrange [*:*]
+    set yrange [*:100]
+
+    plot 0                                                  w l ls 10 t "", \
+         "< awk '($5==0){print}' ce-hull.dat" u 2:($7*1000) w lp ls 1 ps 1.0 pt 6 notitle, \
+         "< awk '($6==0){print}' ce-hull.dat" u 2:($8*1000) w lp ls 2 ps 1.0 pt 4 notitle, \
+         "ce-hull.dat"                        u 2:($3*1000):1 w labels font ",10" tc ls 1 t "DFT", \
+         "ce-hull.dat"                        u 2:($4*1000):1 w labels font ",10" tc ls 2 t N2." clusters"
+}
+
+#----------------------------------------------------------------------#
+#                     Errors from cross validation                     #
+#----------------------------------------------------------------------#
+
+if (cv_score == 1) {
+    # fit mean absolute error (mae) and root mean squared error (rmse)
+    set fit quiet
+    set fit logfile '/dev/null'
+    fit mae "cv-energies.dat" u 2:(abs(1000*($4-$3))) via mae
+    fit rmse "cv-energies.dat" u 2:((1000*($4-$3))*(1000*($4-$3))) via rmse
+    rmse = sqrt(rmse)
+
+    set terminal pdf enhanced dashed size 6.0, 3.0 font "Helvetica,12"
+    set output "graph-cv-errors.pdf"
+    set size nosquare
+
+    set xrange [*:*]
+    set xtics auto format "%.0f"
+
+    set yrange [*:*]
+    set ytics auto format "%.0f"
+    set xlabel "DFT energy above hull (meV)"
+    set ylabel "CV error (meV)"
+
+    set key top right samplen 1.5 spacing 1.5 width 1.5
+
+    plot 0                                                     w l   ls 10 t "", \
+         mae                                                   w l   ls 12 t "MAE", \
+         -mae                                                  w l   ls 12 t "", \
+         rmse                                                  w l   ls  3 t "RMSE", \
+         -rmse                                                 w l   ls  3 t "", \
+         "cv-energies.dat" u 2:(1000*($4-$3))                  w imp ls  1 t "", \
+         "cv-energies.dat" u 2:(1000*($4-$3))                  w p   ls  1 t "", \
+         "cv-energies.dat" u 2:(1000*($4-$3) + rmse/5.0*sgn($4-$3)):1 w labels t ""
+}

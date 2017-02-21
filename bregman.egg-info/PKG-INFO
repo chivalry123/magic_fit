@@ -1,0 +1,20 @@
+Metadata-Version: 1.1
+Name: bregman
+Version: 0.1.0a1
+Summary: Split Bregman
+Home-page: UNKNOWN
+Author: Alexander Urban
+Author-email: alexurba@mit.edu
+License: MIT
+Description: =============
+        
+        This needs to be detailed
+        
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Development Status :: 2 - Pre-Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Topic :: Scientific/Engineering :: Chemistry
