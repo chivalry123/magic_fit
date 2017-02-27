@@ -258,10 +258,6 @@ class CASMSet_WX_create_sub(CESet):
 
         self.cluster_multiplicity=grand_casm.cluster_multiplicity
         self.cluster_size=grand_casm.cluster_size
-
-        # self.read_eci_in_to_determine_multiplicity()
-
-
         diff_foscus_lists_of_lists_tmp = grand_casm.diff_foscus_lists_of_lists
         self.diff_foscus_lists_of_lists=self.map_lists_of_lists_to_new_list_of_list(indexes_to_use,diff_foscus_lists_of_lists_tmp)
         self.DiffFocusWeight=grand_casm.DiffFocusWeight
