@@ -140,7 +140,7 @@ class CESet(object):
         #     print("total_zip is")
         #     pprint(total_zip,width=130)
         #
-        #     hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-4)[0]
+        #     hull_idx_another_approach=self.compute_hull_idx()
         #     hull_idx=hull_idx_another_approach
         #     hull_conc=[self.concentrations[i] for i in hull_idx]
         #     hull_form_e=[self.formation_energies_in[i] for i in hull_idx]
@@ -1576,7 +1576,7 @@ class CESet(object):
         self.decide_valid_lists()
 
         if AbsoluteErrorConstraintOnHull is not None:
-            hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-4)[0]
+            hull_idx_another_approach=self.compute_hull_idx()
             hull_idx=hull_idx_another_approach
             for i in hull_idx:
                 if i in self.valid_index:
@@ -1598,7 +1598,7 @@ class CESet(object):
 
         if activate_GS_preservation:
 
-            hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-4)[0]
+            hull_idx_another_approach=self.compute_hull_idx()
             hull_idx=hull_idx_another_approach
             hull_conc=[self.concentrations[i] for i in hull_idx]
             hull_form_e=[self.formation_energies_in[i] for i in hull_idx]
@@ -1764,7 +1764,7 @@ class CESet(object):
             invalid_index_due_to_conc_min=self.invalid_index_due_to_conc_min
             invalid_index_due_to_conc_max=self.invalid_index_due_to_conc_max
 
-            hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-4)[0]
+            hull_idx_another_approach=self.compute_hull_idx()
             hull_idx=hull_idx_another_approach
             hull_conc=[self.concentrations[i] for i in hull_idx]
             hull_form_e=[self.formation_energies_in[i] for i in hull_idx]
@@ -1869,9 +1869,6 @@ class CESet(object):
                 constr_1 = (sum_coeff == 1)
                 constr_list.append(constr_1)
 
-                i_in_hull_idx_index = hull_idx.index(i)
-                special_constr = (coeff[i_in_hull_idx_index] == 0)
-                constr_list.append(special_constr)
 
 
 
@@ -1883,8 +1880,9 @@ class CESet(object):
                 for d in range(self.dimension):
                     sum_conc_d_now = 0
                     for j in range(len(hull_conc)):
-                        sum_conc_d_now += hull_conc[j][d]*coeff[j]
-                    constr_d_now = (sum_conc_d_now==conc_i[d])
+                        sum_conc_d_now += float (hull_conc[j][d])*coeff[j]
+
+                    constr_d_now = (sum_conc_d_now==float(conc_i[d]))
                     constr_list.append(constr_d_now)
 
                 obj = 0

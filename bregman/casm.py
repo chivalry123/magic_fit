@@ -34,7 +34,7 @@ class CASMSet(CESet):
     """
 
     def __init__(self, corr_in_file, energy_file, shift_energies=False,
-                 detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None):
+                 detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None):
         self.corr_in_file = corr_in_file
         self.energy_file = energy_file
 
@@ -56,6 +56,26 @@ class CASMSet(CESet):
         self.diff_foscus_lists_of_lists=[]
         if DiffFocus is not None:
             self.read_diff_focused_txt(DiffFocus)
+            if DiffFocusName is not None:
+                raise AssertionError("only DiffFocus or DiffFocusName")
+        if DiffFocusName is not None:
+            self.diff_foscus_lists_of_lists=[]
+            self.diff_foscus_names_lists_of_lists=[]
+            self.read_diff_focused_name_txt(DiffFocusName)
+            for list_now in self.diff_foscus_names_lists_of_lists:
+                list_tmp = []
+                for file_name_now in list_now:
+                    match_found=False
+                    for i in range(len(directories)):
+                        if file_name_now in directories[i]:
+                            list_tmp.append(i)
+                            match_found=True
+                            break
+                    if match_found==False:
+                        raise AssertionError(file_name_now+" does not correspond to any directories ")
+                self.diff_foscus_lists_of_lists.append(list_tmp)
+
+
         print("diff focued list is")
         pprint(self.diff_foscus_lists_of_lists)
         self.DiffFocusWeight=DiffFocusWeight
@@ -66,6 +86,17 @@ class CASMSet(CESet):
 
     def __str__(self):
         return
+
+    def read_diff_focused_name_txt(self,DiffFocusName):
+        # print("reading diff focused txt")
+        with open(DiffFocusName, 'r') as f:
+            # next(f)
+            for line in f:
+                line_now = line.split()
+                list_now = map(str, line.split())
+                self.diff_foscus_names_lists_of_lists.append(list_now)
+
+
 
     def read_diff_focused_txt(self,DiffFocus):
         # print("reading diff focused txt")

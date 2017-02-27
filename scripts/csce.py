@@ -43,7 +43,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            concentrationmax,researchonfittingmode,partitionsnumberforcvscore,DeactivateGSPreservation,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
-                           DiffFocusWeight,SpecializedCvPengHaoGS):
+                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName):
 
     time_start = time.clock()
 
@@ -52,7 +52,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
     casm = CASMSet(corr_in_file, energy_file, shift_energies=shift_energies,
                    detect_redundant_clusters=(not no_detect_redundant),
-                   pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight)
+                   pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -867,7 +867,15 @@ if (__name__ == "__main__"):
     parser.add_argument(
         "--DiffFocus",
         help="Apply difference focused based on file diff_focused.txt please "
-             "set this directed to  diff_focused.txt if you want to use it",
+             "set this directed to  diff_focused.txt if you want to use it, it contains the index"
+             "of structures",
+        default=None)
+
+    parser.add_argument(
+        "--DiffFocusName",
+        help="Apply difference focused based on file diff_focused_name.txt please "
+             "set this directed to  diff_focused.txt if you want to use it, it contains the prtial"
+             " dir names of structures",
         default=None)
 
     parser.add_argument(
@@ -881,8 +889,6 @@ if (__name__ == "__main__"):
         help="specialized procedure for computing cv score ground state set is always in ",
         default=False,
         action="store_true")
-
-
 
 
     args = parser.parse_args()
@@ -948,5 +954,6 @@ if (__name__ == "__main__"):
                            AbsoluteErrorConstraintOnHull=args.AbsoluteErrorConstraintOnHull,
                            DiffFocus=args.DiffFocus,
                            DiffFocusWeight=args.DiffFocusWeight,
-                           SpecializedCvPengHaoGS=args.SpecializedCvPengHaoGS)
+                           SpecializedCvPengHaoGS=args.SpecializedCvPengHaoGS,
+                           DiffFocusName=args.DiffFocusName)
 
