@@ -894,7 +894,7 @@ if (__name__ == "__main__"):
     parser.add_argument(
         "--SmallErrorOnInequality",
         help=" The small error on the inequality   ",
-        default=float,
+        type=float,
         default=1e-3)
 
 

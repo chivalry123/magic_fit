@@ -1869,6 +1869,9 @@ class CESet(object):
                 constr_list.append(constr_1)
 
 
+                i_in_hull_idx_index = hull_idx.index(i)
+                special_constr = (coeff[i_in_hull_idx_index] == 0)
+                constr_list.append(special_constr)
 
 
                 for j in range(len(hull_conc)):
@@ -1909,6 +1912,6 @@ class CESet(object):
         return self.special_decomposition_data
 
     def compute_hull_idx(self):
-        hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-4)[0]
+        hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-8)[0]
         self.hull_idx = hull_idx_another_approach
         return hull_idx_another_approach
