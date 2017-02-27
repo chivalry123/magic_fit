@@ -43,7 +43,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            concentrationmax,researchonfittingmode,partitionsnumberforcvscore,DeactivateGSPreservation,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
-                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName):
+                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality):
 
     time_start = time.clock()
 
@@ -52,7 +52,8 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
     casm = CASMSet(corr_in_file, energy_file, shift_energies=shift_energies,
                    detect_redundant_clusters=(not no_detect_redundant),
-                   pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName)
+                   pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName,
+                   SmallErrorOnInequality=SmallErrorOnInequality)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -890,6 +891,13 @@ if (__name__ == "__main__"):
         default=False,
         action="store_true")
 
+    parser.add_argument(
+        "--SmallErrorOnInequality",
+        help=" The small error on the inequality   ",
+        default=float,
+        default=1e-3)
+
+
 
     args = parser.parse_args()
     print("\n " + " ".join(sys.argv) + "\n")
@@ -955,5 +963,6 @@ if (__name__ == "__main__"):
                            DiffFocus=args.DiffFocus,
                            DiffFocusWeight=args.DiffFocusWeight,
                            SpecializedCvPengHaoGS=args.SpecializedCvPengHaoGS,
-                           DiffFocusName=args.DiffFocusName)
+                           DiffFocusName=args.DiffFocusName,
+                           SmallErrorOnInequality=args.SmallErrorOnInequality)
 

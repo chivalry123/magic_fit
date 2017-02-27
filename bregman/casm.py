@@ -34,7 +34,9 @@ class CASMSet(CESet):
     """
 
     def __init__(self, corr_in_file, energy_file, shift_energies=False,
-                 detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None):
+                 detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None,
+                 SmallErrorOnInequality=None):
+        self.SmallErrorOnInequality=SmallErrorOnInequality
         self.corr_in_file = corr_in_file
         self.energy_file = energy_file
 
@@ -48,6 +50,8 @@ class CASMSet(CESet):
         # print(energy)
         # print("energy_shift")
         # print(energy_shift)
+
+
 
         self.cluster_multiplicity=[]
         self.cluster_size=[]
@@ -241,6 +245,7 @@ class CASMSet(CESet):
 class CASMSet_WX_create_sub(CESet):
     def __init__(self, grand_casm, indexes_to_use ,shift_energies=False,
                  detect_redundant_clusters=True, pca=False):
+        self.SmallErrorOnInequality=grand_casm.SmallErrorOnInequality
         energy=np.asarray([grand_casm.energy_in[i] for i in indexes_to_use])
         correlations=np.asarray([grand_casm.correlations_in[i]  for i in indexes_to_use])
         energy_shift=grand_casm.energy_shift

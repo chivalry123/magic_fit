@@ -1569,8 +1569,7 @@ class CESet(object):
         h_3=np.zeros((2*self.N_corr,1))
         h_3_without_preserve_GS = h_3[:]
 
-        small_error_global=1e-3
-
+        small_error_global=self.SmallErrorOnInequality
 
         self.add_concentration_min_max(concentrationmin,concentrationmax)
         self.decide_valid_lists()
