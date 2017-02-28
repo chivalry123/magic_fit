@@ -485,7 +485,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
             avg_out_of_sample_rmse_list.append(avg_out_of_sample_rmse)
             rms_out_of_sample_rmse = np.linalg.norm(np.array(non_weighted_rmse_list),ord=2)/np.sqrt(len(non_weighted_rmse_list))
             rms_out_of_sample_rmse_list.append(rms_out_of_sample_rmse)
-            print("mu_now, avg_out_of_sample_rmse, rms__out_of_sample_rmse is,",mu_now, avg_out_of_sample_rmse,rms_out_of_sample_rmse)
+            print("mu_now, avg_out_of_sample_rmse, rms_out_of_sample_rmse is,",mu_now, avg_out_of_sample_rmse,rms_out_of_sample_rmse)
 
             if (debug_now):
                 print("in case it fails in the future, let's print temporary results")
@@ -499,7 +499,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
         print("mu     cv_score(avg_oos_rmse)    another_cv_score(avg_oos_rmse)")
         for mu_print,avg_print,rms_print in zip(mus,avg_out_of_sample_rmse_list,rms_out_of_sample_rmse_list):
-            print(mu_print," ",avg_print," ",rms_out_of_sample_rmse)
+            print(mu_print," ",avg_print," ",rms_print)
 
         if (researchonfittingmodeWeightadjusting):
             print("additionally as we are doing  weight adjusting, let's check the following")
