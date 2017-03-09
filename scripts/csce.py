@@ -43,7 +43,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            concentrationmax,researchonfittingmode,partitionsnumberforcvscore,DeactivateGSPreservation,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
-                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality):
+                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis):
 
     time_start = time.clock()
 
@@ -53,7 +53,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
     casm = CASMSet(corr_in_file, energy_file, shift_energies=shift_energies,
                    detect_redundant_clusters=(not no_detect_redundant),
                    pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName,
-                   SmallErrorOnInequality=SmallErrorOnInequality)
+                   SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -897,6 +897,12 @@ if (__name__ == "__main__"):
         type=float,
         default=1e-3)
 
+    parser.add_argument(
+        "--OnlyKeppEcis",
+        help="point to only_keep_ecis.txt to only keep these ECIs",
+        default=None)
+
+
 
 
     args = parser.parse_args()
@@ -964,5 +970,6 @@ if (__name__ == "__main__"):
                            DiffFocusWeight=args.DiffFocusWeight,
                            SpecializedCvPengHaoGS=args.SpecializedCvPengHaoGS,
                            DiffFocusName=args.DiffFocusName,
-                           SmallErrorOnInequality=args.SmallErrorOnInequality)
+                           SmallErrorOnInequality=args.SmallErrorOnInequality,
+                           OnlyKeppEcis=args.OnlyKeppEcis)
 

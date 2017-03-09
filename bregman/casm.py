@@ -35,7 +35,7 @@ class CASMSet(CESet):
 
     def __init__(self, corr_in_file, energy_file, shift_energies=False,
                  detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None,
-                 SmallErrorOnInequality=None):
+                 SmallErrorOnInequality=None,OnlyKeppEcis=None):
         self.SmallErrorOnInequality=SmallErrorOnInequality
         self.corr_in_file = corr_in_file
         self.energy_file = energy_file
@@ -43,6 +43,14 @@ class CASMSet(CESet):
         # read energies of the input structures
         (energy, dimension, concentrations, directories, energy_shift
          ) = self._read_energies(energy_file, shift_energies)
+
+
+        self.only_kept_ecis_list=None
+
+        if OnlyKeppEcis is not None:
+            self.only_kept_ecis_list=[]
+            self.readOnlyKeppEcis(OnlyKeppEcis)
+
         # read cluster correlations for all input structures
         correlations = self._read_cluster_correlations(
             corr_in_file, detect_linear_dependencies=detect_redundant_clusters)
@@ -58,6 +66,8 @@ class CASMSet(CESet):
 
         self.read_eci_in_to_determine_multiplicity()
         self.diff_foscus_lists_of_lists=[]
+
+
         if DiffFocus is not None:
             self.read_diff_focused_txt(DiffFocus)
             if DiffFocusName is not None:
@@ -90,6 +100,15 @@ class CASMSet(CESet):
 
     def __str__(self):
         return
+
+    def readOnlyKeppEcis(self,OnlyKeppEcis):
+        with open(OnlyKeppEcis, 'r') as f:
+            # next(f)
+            for line in f:
+                # line_now = line.split()
+                list_now = map(int, line.split())
+                self.only_kept_ecis_list+=list_now
+
 
     def read_diff_focused_name_txt(self,DiffFocusName):
         # print("reading diff focused txt")
@@ -171,6 +190,11 @@ class CASMSet(CESet):
                 if np.linalg.norm(error) < 1.0e-10:
                     n_redundant += 1
                     A[:, i] = 0.0
+                elif self.only_kept_ecis_list is not None:
+                    if i not in self.only_kept_ecis_list:
+                        n_redundant += 1
+                        A[:, i] = 0.0
+
             if n_redundant > 0:
                 corr_in_file_red = corr_in_file + "-red"
                 print(" {} redundant clusters removed.".format(n_redundant))
