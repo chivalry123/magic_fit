@@ -65,6 +65,7 @@ class CASMSet(CESet):
         self.read_eci_in_to_determine_multiplicity()
         self.diff_foscus_lists_of_lists=[]
 
+        self.DiffFocusWeight=DiffFocusWeight
 
         if DiffFocus is not None:
             raise AssertionError("DiffFocus is disabled, please use DiffFocusName instead")
@@ -92,7 +93,6 @@ class CASMSet(CESet):
 
         print("diff focued list is")
         pprint(self.diff_foscus_lists_of_lists)
-        self.DiffFocusWeight=DiffFocusWeight
 
         super(CASMSet, self).__init__(
             energy, energy_shift, correlations, directories,
@@ -120,7 +120,7 @@ class CASMSet(CESet):
                 list_now_0 = list_now[0]
                 list_now_0_split= list_now_0.split(":")
                 if list_now_0_split[0]=="weight":
-                    weight_now = float(list_now_0[1])
+                    weight_now = float(list_now_0_split[1])
                     list_now = list_now[1:]
                 else:
                     weight_now=self.DiffFocusWeight
