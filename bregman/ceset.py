@@ -1525,13 +1525,13 @@ class CESet(object):
 
             P_diff_focus_part = 0
             q_diff_focus_part = 0
-            for list_now in self.diff_foscus_lists_of_lists:
+            for index,list_now in enumerate(self.diff_foscus_lists_of_lists):
                 for i in range(1,len(list_now)):
                     corr_diff_focus_now = np.array([corr_in[list_now[i]]-corr_in[list_now[0]]]) #explicit row vector
                     assert corr_diff_focus_now.shape[0] == 1
                     energy_diff_now = engr_in[list_now[i]]-engr_in[list_now[0]]
-                    P_diff_focus_part += 2*self.DiffFocusWeight*corr_diff_focus_now.transpose().dot(corr_diff_focus_now)
-                    q_diff_focus_part += -2*self.DiffFocusWeight*corr_diff_focus_now.transpose()*energy_diff_now
+                    P_diff_focus_part += 2*self.diff_foscus_weights_lists[index]*corr_diff_focus_now.transpose().dot(corr_diff_focus_now)
+                    q_diff_focus_part += -2*self.diff_foscus_weights_lists[index]*corr_diff_focus_now.transpose()*energy_diff_now
             P_corr_part += P_diff_focus_part
 
 

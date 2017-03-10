@@ -59,8 +59,6 @@ class CASMSet(CESet):
         # print("energy_shift")
         # print(energy_shift)
 
-
-
         self.cluster_multiplicity=[]
         self.cluster_size=[]
 
@@ -69,12 +67,14 @@ class CASMSet(CESet):
 
 
         if DiffFocus is not None:
+            raise AssertionError("DiffFocus is disabled, please use DiffFocusName instead")
             self.read_diff_focused_txt(DiffFocus)
             if DiffFocusName is not None:
                 raise AssertionError("only DiffFocus or DiffFocusName")
         if DiffFocusName is not None:
             self.diff_foscus_lists_of_lists=[]
             self.diff_foscus_names_lists_of_lists=[]
+            self.diff_foscus_weights_lists = []
             self.read_diff_focused_name_txt(DiffFocusName)
             for list_now in self.diff_foscus_names_lists_of_lists:
                 list_tmp = []
@@ -117,8 +117,15 @@ class CASMSet(CESet):
             for line in f:
                 line_now = line.split()
                 list_now = map(str, line.split())
+                list_now_0 = list_now[0]
+                list_now_0_split= list_now_0.split(":")
+                if list_now_0_split[0]=="weight":
+                    weight_now = float(list_now_0[1])
+                    list_now = list_now[1:]
+                else:
+                    weight_now=self.DiffFocusWeight
                 self.diff_foscus_names_lists_of_lists.append(list_now)
-
+                self.diff_foscus_weights_lists.append(weight_now)
 
 
     def read_diff_focused_txt(self,DiffFocus):
@@ -269,6 +276,9 @@ class CASMSet(CESet):
 class CASMSet_WX_create_sub(CESet):
     def __init__(self, grand_casm, indexes_to_use ,shift_energies=False,
                  detect_redundant_clusters=True, pca=False):
+        self.only_kept_ecis_list = grand_casm.only_kept_ecis_list
+        self.diff_foscus_weights_lists=grand_casm.diff_foscus_weights_lists
+
         self.SmallErrorOnInequality=grand_casm.SmallErrorOnInequality
         energy=np.asarray([grand_casm.energy_in[i] for i in indexes_to_use])
         correlations=np.asarray([grand_casm.correlations_in[i]  for i in indexes_to_use])
@@ -285,7 +295,6 @@ class CASMSet_WX_create_sub(CESet):
         diff_foscus_lists_of_lists_tmp = grand_casm.diff_foscus_lists_of_lists
         self.diff_foscus_lists_of_lists=self.map_lists_of_lists_to_new_list_of_list(indexes_to_use,diff_foscus_lists_of_lists_tmp)
         self.DiffFocusWeight=grand_casm.DiffFocusWeight
-
         # print("in this subcasm  indexes_to_use is ")
         # print(indexes_to_use)
         # print("initial diff_foscus_lists_of_lists is")
