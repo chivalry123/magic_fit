@@ -1560,7 +1560,7 @@ class CESet(object):
                count_of_two += 1
                if count_of_two == 1:
                    min_clust_length=self.cluster_length[i]
-               if self.cluster_length < min_clust_length*(1+1e-4):
+               if self.cluster_length[i] < min_clust_length*(1+1e-4):
                    q_z_part[i]=0
 
 
