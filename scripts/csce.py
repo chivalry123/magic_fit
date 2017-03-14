@@ -54,7 +54,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                    detect_redundant_clusters=(not no_detect_redundant),
                    pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName,
                    SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis,
-                   DisableCompressFirstPair=CompressFirstPair)
+                   CompressFirstPair=CompressFirstPair)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
