@@ -35,7 +35,7 @@ class CASMSet(CESet):
 
     def __init__(self, corr_in_file, energy_file, shift_energies=False,
                  detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None,
-                 SmallErrorOnInequality=None,OnlyKeppEcis=None):
+                 SmallErrorOnInequality=None,OnlyKeppEcis=None,CompressFirstPair=None):
         self.SmallErrorOnInequality=SmallErrorOnInequality
         self.corr_in_file = corr_in_file
         self.energy_file = energy_file
@@ -50,6 +50,8 @@ class CASMSet(CESet):
         if OnlyKeppEcis is not None:
             self.only_kept_ecis_list=[]
             self.readOnlyKeppEcis(OnlyKeppEcis)
+
+        self.CompressFirstPair=CompressFirstPair
 
         # read cluster correlations for all input structures
         correlations = self._read_cluster_correlations(
@@ -280,6 +282,8 @@ class CASMSet(CESet):
 class CASMSet_WX_create_sub(CESet):
     def __init__(self, grand_casm, indexes_to_use ,shift_energies=False,
                  detect_redundant_clusters=True, pca=False):
+        self.CompressFirstPair=grand_casm.CompressFirstPair
+
         self.only_kept_ecis_list = grand_casm.only_kept_ecis_list
         self.diff_foscus_weights_lists=grand_casm.diff_foscus_weights_lists
 

@@ -43,7 +43,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            concentrationmax,researchonfittingmode,partitionsnumberforcvscore,DeactivateGSPreservation,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
-                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis):
+                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair):
 
     time_start = time.clock()
 
@@ -53,7 +53,8 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
     casm = CASMSet(corr_in_file, energy_file, shift_energies=shift_energies,
                    detect_redundant_clusters=(not no_detect_redundant),
                    pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName,
-                   SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis)
+                   SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis,
+                   DisableCompressFirstPair=CompressFirstPair)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -902,6 +903,11 @@ if (__name__ == "__main__"):
         help="point to only_keep_ecis.txt to only keep these ECIs",
         default=None)
 
+    parser.add_argument(
+        "--CompressFirstPair",
+        help="do we want to  compress first pair? ",
+        default=False,
+        action="store_true")
 
 
 
@@ -973,5 +979,6 @@ if (__name__ == "__main__"):
                            SpecializedCvPengHaoGS=args.SpecializedCvPengHaoGS,
                            DiffFocusName=args.DiffFocusName,
                            SmallErrorOnInequality=args.SmallErrorOnInequality,
-                           OnlyKeppEcis=args.OnlyKeppEcis)
+                           OnlyKeppEcis=args.OnlyKeppEcis,
+                           CompressFirstPair=args.CompressFirstPair)
 
