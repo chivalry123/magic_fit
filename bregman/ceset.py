@@ -1551,15 +1551,26 @@ class CESet(object):
 
         Dim = len(self.concentrations[0])
         count_of_two = 0
+        min_clust_length = 0
         for i in range(len(corr_in[0])):
             if self.cluster_size[i] < 2:
                q_z_part[i]=0
-            if self.dimension < 2:
-                if self.cluster_size[i] == 2:
-                   count_of_two += 1
-                   if count_of_two == 1:
-                       q_z_part[i]=0
-                    
+
+            if self.cluster_size[i] == 2:
+               count_of_two += 1
+               if count_of_two == 1:
+                   min_clust_length=self.cluster_length[i]
+               if self.cluster_length < min_clust_length*(1+1e-4):
+                   q_z_part[i]=0
+
+
+
+            # if self.dimension < 2:
+            #     if self.cluster_size[i] == 2:
+            #        count_of_two += 1
+            #        if count_of_two == 1:
+            #            q_z_part[i]=0
+            #
 
         q=np.concatenate((q_corr_part,q_z_part),axis=0)
         G_1=np.concatenate((np.identity(self.N_corr),-np.identity(self.N_corr)),axis=1)

@@ -61,6 +61,7 @@ class CASMSet(CESet):
 
         self.cluster_multiplicity=[]
         self.cluster_size=[]
+        self.cluster_length=[]
 
         self.read_eci_in_to_determine_multiplicity()
         self.diff_foscus_lists_of_lists=[]
@@ -262,9 +263,12 @@ class CASMSet(CESet):
             next(f)
             for line in f:
                 (i, w, mult,size) = map(int, line.split()[0:4])
+                length=float(line.split()[4])
                 assert old_i + 1 == i
                 self.cluster_multiplicity.append(mult)
                 self.cluster_size.append(size)
+                self.cluster_length.append(length)
+
                 old_i = i
 
 
@@ -292,6 +296,7 @@ class CASMSet_WX_create_sub(CESet):
 
         self.cluster_multiplicity=grand_casm.cluster_multiplicity
         self.cluster_size=grand_casm.cluster_size
+        self.cluster_length = grand_casm.cluster_length
         diff_foscus_lists_of_lists_tmp = grand_casm.diff_foscus_lists_of_lists
         self.diff_foscus_lists_of_lists=self.map_lists_of_lists_to_new_list_of_list(indexes_to_use,diff_foscus_lists_of_lists_tmp)
         self.DiffFocusWeight=grand_casm.DiffFocusWeight
