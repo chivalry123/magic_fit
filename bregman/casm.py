@@ -285,8 +285,11 @@ class CASMSet_WX_create_sub(CESet):
         self.CompressFirstPair=grand_casm.CompressFirstPair
 
         self.only_kept_ecis_list = grand_casm.only_kept_ecis_list
-        self.diff_foscus_weights_lists=grand_casm.diff_foscus_weights_lists
-
+        try:
+            self.diff_foscus_weights_lists=grand_casm.diff_foscus_weights_lists
+        except:
+            pass
+        
         self.SmallErrorOnInequality=grand_casm.SmallErrorOnInequality
         energy=np.asarray([grand_casm.energy_in[i] for i in indexes_to_use])
         correlations=np.asarray([grand_casm.correlations_in[i]  for i in indexes_to_use])

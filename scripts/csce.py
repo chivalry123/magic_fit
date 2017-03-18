@@ -13,7 +13,6 @@ import sys
 import numpy as np
 from math import log
 import  random
-
 import time
 
 from bregman.casm import CASMSet, CASMSet_WX_create_sub
@@ -43,7 +42,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            concentrationmax,researchonfittingmode,partitionsnumberforcvscore,DeactivateGSPreservation,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
-                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair):
+                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair,MIQP):
 
     time_start = time.clock()
 
@@ -102,7 +101,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
         print(" Reading ECIs from file `{}'\n".format(eci_input_file))
         casm.read_ECIs(eci_input_file)
 
-    if QP or researchonfittingmode:
+    if QP or MIQP or researchonfittingmode:
         1;
     else:
         # compressive-sensing CE
@@ -117,7 +116,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
     # CE energies and errors using all non-zero ECIs
 
-    if not (QP or researchonfittingmode):
+    if not (QP or MIQP or researchonfittingmode):
         E_all = casm.compute_ce_energies()
         (rmse_all, mue_all, mse_all, rmse_noW,rmse_no_hypo_no_weight
          ) = casm.compute_ce_errors(ce_energies=E_all)
@@ -238,7 +237,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
 
 
-    if QP:
+    if QP or MIQP:
         min_mu=MuStart
         max_mu=MuEnd
         mus = list(np.logspace(log(min_mu,10), log(max_mu,10), MuPartition))
@@ -252,8 +251,14 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
             for i in range(len(mus)):
                 mu_now=mus[i]
-                casm.perform_QP(mu=mu_now,concentrationmin=concentrationmin,
-                               concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+                if MIQP :
+                    casm.perform_MIQP(mu=mu_now,concentrationmin=concentrationmin,
+                                   concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+                else:
+                    casm.perform_QP(mu=mu_now,concentrationmin=concentrationmin,
+                                   concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+
+
                 idx_del = [i for i in range(casm.N_corr)
                            if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
                 casm.ecis[idx_del] = 0.0
@@ -273,9 +278,16 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                 num_non_zero_eci_list.append(num_non_zero_eci_now)
                 print ("mu_now, weighted_rmse_now, none-weighted_rmse_now , num_non_zero_eci_now is",mu_now, rmse_no_hypo_weighted, rmse_no_hypo_no_weight, num_non_zero_eci_now)
 
+            if MIQP :
+                casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
+                           concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            else:
+                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+                           concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
 
-            casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
-                               concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+
+            # casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+            #                    concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
             idx_del = [i for i in range(casm.N_corr)
                        if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
             casm.ecis[idx_del] = 0.0
@@ -297,8 +309,14 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
             for i in range(len(mus)):
                 mu_now=mus[i]
-                casm.perform_QP(mu=mu_now,concentrationmin=concentrationmin,
-                               concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+                if MIQP :
+                    casm.perform_MIQP(mu=mu_now,concentrationmin=concentrationmin,
+                                   concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+                else:
+                    casm.perform_QP(mu=mu_now,concentrationmin=concentrationmin,
+                                   concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+
+
                 idx_del = [i for i in range(casm.N_corr)
                            if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
                 casm.ecis[idx_del] = 0.0
@@ -325,8 +343,12 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                    concentrationmax=concentrationmax)
 
         else:
-            casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
-                               concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            if MIQP:
+                casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
+                                   concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            elif QP:
+                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+                                   concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
 
 
 
@@ -348,9 +370,14 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
 
         if (DeactivateGSPreservation==True):
-
-            casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+            if MIQP:
+                casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
                            concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            else:
+                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+                               concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+
+
             idx_del = [i for i in range(casm.N_corr)
                        if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
             casm.ecis[idx_del] = 0.0
@@ -443,8 +470,13 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                 elif (researchonfittingmodeWeightadjusting and preservation_succeed[-1]==0):
                     sub_casm_now.ecis==np.zeros(sub_casm_now.N_corr)
                 else:
-                    sub_casm_now.perform_QP(mu=mu_now,concentrationmin=concentrationmin,
-                                   concentrationmax=concentrationmax,activate_GS_preservation=(not deactivate),AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+                    if MIQP:
+                        sub_casm_now.perform_MIQP(mu=mu_now,concentrationmin=concentrationmin,
+                                       concentrationmax=concentrationmax,activate_GS_preservation=(not deactivate),AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+
+                    else:
+                        sub_casm_now.perform_QP(mu=mu_now,concentrationmin=concentrationmin,
+                                       concentrationmax=concentrationmax,activate_GS_preservation=(not deactivate),AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
 
 
 
@@ -515,8 +547,12 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
         do_not_want_error=True
         if do_not_want_error:
-            casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+            if MIQP:
+                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
                    concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            else:
+                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+                       concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
             idx_del = [i for i in range(casm.N_corr)
                        if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
             casm.ecis[idx_del] = 0.0
@@ -785,7 +821,8 @@ if (__name__ == "__main__"):
     parser.add_argument(
         "--QP",
         help="use quadratic programming solver and hull constraints to solve the problem, we use mu with mu|x|+||Ax-b||^2 as the objective function",
-        action="store_true")
+        action="store_true",
+        default=False)
 
     parser.add_argument(
         "--concentrationmin",
@@ -909,6 +946,11 @@ if (__name__ == "__main__"):
         default=False,
         action="store_true")
 
+    parser.add_argument(
+        "--MIQP",
+        help="use l0 norm compressed sensing ",
+        default=False,
+        action="store_true")
 
 
 
@@ -980,5 +1022,6 @@ if (__name__ == "__main__"):
                            DiffFocusName=args.DiffFocusName,
                            SmallErrorOnInequality=args.SmallErrorOnInequality,
                            OnlyKeppEcis=args.OnlyKeppEcis,
-                           CompressFirstPair=args.CompressFirstPair)
+                           CompressFirstPair=args.CompressFirstPair,
+                           MIQP=args.MIQP)
 
