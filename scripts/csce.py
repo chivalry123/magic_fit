@@ -42,7 +42,8 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            concentrationmax,researchonfittingmode,partitionsnumberforcvscore,DeactivateGSPreservation,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
-                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair,MIQP):
+                           DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair,MIQP,
+                           UnCompressPairUptoDist):
 
     time_start = time.clock()
 
@@ -53,7 +54,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                    detect_redundant_clusters=(not no_detect_redundant),
                    pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName,
                    SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis,
-                   CompressFirstPair=CompressFirstPair)
+                   CompressFirstPair=CompressFirstPair,UnCompressPairUptoDist=UnCompressPairUptoDist)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -952,6 +953,11 @@ if (__name__ == "__main__"):
         default=False,
         action="store_true")
 
+    parser.add_argument(
+        "--UnCompressPairUptoDist",
+        help="how long do we want to uncompress up to ",
+        default=None,
+        type=float)
 
 
 
@@ -1023,5 +1029,6 @@ if (__name__ == "__main__"):
                            SmallErrorOnInequality=args.SmallErrorOnInequality,
                            OnlyKeppEcis=args.OnlyKeppEcis,
                            CompressFirstPair=args.CompressFirstPair,
-                           MIQP=args.MIQP)
+                           MIQP=args.MIQP,
+                           UnCompressPairUptoDist=args.UnCompressPairUptoDist)
 

@@ -1564,6 +1564,10 @@ class CESet(object):
                    if self.cluster_length[i] < min_clust_length*(1+1e-4):
                        q_z_part[i]=0
 
+            if self.UnCompressPairUptoDist is not None:
+                if self.cluster_size[i] == 2 and self.cluster_length[i]<=self.UnCompressPairUptoDist:
+                   q_z_part[i]=0
+
 
 
             # if self.dimension < 2:
