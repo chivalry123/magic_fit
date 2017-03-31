@@ -1584,7 +1584,6 @@ class CESet(object):
             pickle.dump(binary_list, output)
             output.close()
 
-
         try:
             time_limit = float(self.time_limit_miqp)
         except:
@@ -1592,6 +1591,11 @@ class CESet(object):
                 time_limit = 300
             else:
                 time_limit = 10
+        try:
+            heuristics = self.heuristics
+        except:
+            heuristics = 1
+
 
         binary_list = set(binary_list)
         if len(q_matrix.shape)==2:
@@ -1630,9 +1634,10 @@ class CESet(object):
                 obj += q_matrix[j]*vars[j]
         model.setObjective(obj)
 
-
         model.setParam(gurobi.GRB.Param.OutputFlag, False)
         model.setParam(gurobi.GRB.Param.TimeLimit, time_limit)
+        model.setParam(gurobi.GRB.Param.Heuristics, heuristics)
+
         model.optimize()
 
         sol = {}
@@ -1647,7 +1652,6 @@ class CESet(object):
                 sol['x'][i] = x[i]
         else:
             sol["status"] = model.status
-
 
         return sol
 
