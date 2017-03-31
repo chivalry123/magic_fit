@@ -1570,18 +1570,19 @@ class CESet(object):
     def solve_MIQP_matrix(self,P_matrix,q_matrix,G_matrix,h_3_matrix,binary_list):
         # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
 
-        # import pickle
-        # filename='tmp.pkl'
-        # if os.path.exists(filename):
-        #     os.remove(filename)
-        #
-        # output = open(filename, 'wb')
-        # pickle.dump(P_matrix, output)
-        # pickle.dump(q_matrix, output)
-        # pickle.dump(G_matrix, output)
-        # pickle.dump(h_3_matrix, output)
-        # pickle.dump(binary_list, output)
-        # output.close()
+        if len(binary_list)>10:
+            import pickle
+            filename='tmp.pkl'
+            if os.path.exists(filename):
+                os.remove(filename)
+
+            output = open(filename, 'wb')
+            pickle.dump(P_matrix, output)
+            pickle.dump(q_matrix, output)
+            pickle.dump(G_matrix, output)
+            pickle.dump(h_3_matrix, output)
+            pickle.dump(binary_list, output)
+            output.close()
 
 
         try:
@@ -1629,6 +1630,8 @@ class CESet(object):
                 obj += q_matrix[j]*vars[j]
         model.setObjective(obj)
 
+
+        model.setParam(gurobi.GRB.Param.OutputFlag, False)
         model.setParam(gurobi.GRB.Param.TimeLimit, time_limit)
         model.optimize()
 
