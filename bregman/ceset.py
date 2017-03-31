@@ -267,7 +267,7 @@ class CESet(object):
         if give_hypothetical_structure_trivial_weights:
             for i in range(len(self.structure_directory)):
                 if "enum-hypo-" in self.structure_directory[i]:
-                    w[i]=w[i]*1e-7
+                    w[i]=w[i]*1e-15
 
 
         if concentrationmin is not None :
@@ -1484,41 +1484,187 @@ class CESet(object):
                            concentrationmax=None,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=None):
 
         # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
-        # print ("ready for QP")
-        # print ("repr(self.correlations_in)")
-        # print (repr(self.correlations_in))
-        # print ("repr(self.energy_in)")
-        # print (repr(self.energy_in))
-        # print ("repr(self.concentrations)")
-        # print (repr(self.concentrations))
+        self.generate_QP_MIQP_matrix(mu,concentrationmin,
+                   concentrationmax,activate_GS_preservation,AbsoluteErrorConstraintOnHull,MIQP=False)
+
+        P = self.P
+        q = self.q
+        G_3 = self.G_3
+        h_3 = self.h_3
+        G3_without_preserve_GS = self.G3_without_preserve_GS
+        h_3_without_preserve_GS = self.h_3_without_preserve_GS
+
+
+
+        P_matrix=matrix(P)
+        q_matrix=matrix(q)
+        G_3_matrix=matrix(G_3)
+        h_3_matrix=matrix(h_3)
+
+        # print (repr(hull_zip))
+
+        sol = solvers.qp(P_matrix,q_matrix,G_3_matrix,h_3_matrix)
+        if sol["status"]!="optimal":
+            print("*"*1000)
+            print("this subsystem's GS cannot be conserved (mathematically impossible)")
+            print("*"*1000)
+            G3_without_preserve_GS_matrix=matrix(G3_without_preserve_GS)
+            h_3_without_preserve_GS_matrix = matrix(h_3_without_preserve_GS)
+            sol = solvers.qp(P_matrix,q_matrix,G3_without_preserve_GS_matrix,h_3_without_preserve_GS_matrix)
+
+
+        self.ecis = np.zeros(self.N_corr)
+        self.ecis[0:self.N_corr]=sol['x'][0:self.N_corr].T
+
+        if self.eci_cutoff is not None:
+            idx_del = [i for i in range(self.N_corr)
+               if i not in self.nonzero_ECIs(eci_cutoff=self.eci_cutoff)]
+            self.ecis[idx_del] = 0.0
+
+        self.compute_ce_energies()
+        self._update_ce_hull()
+
+
+
+    def perform_MIQP(self,mu=10,concentrationmin=None,
+                           concentrationmax=None,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=None):
+        # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
+        import gurobi
+
+        self.generate_QP_MIQP_matrix(mu,concentrationmin,
+                           concentrationmax,activate_GS_preservation,AbsoluteErrorConstraintOnHull,MIQP=True)
+        P = self.P
+        q = self.q
+        G_3 = self.G_3
+        h_3 = self.h_3
+        G3_without_preserve_GS = self.G3_without_preserve_GS
+        h_3_without_preserve_GS = self.h_3_without_preserve_GS
+        binary_list = self.binary_list
+
+        # print (repr(hull_zip))
+
+        # sol = solvers.qp(P_matrix,q_matrix,G_3_matrix,h_3_matrix)
+
+        # sol = solvers.qp(P,q,G_3,h_3)
+        sol = self.solve_MIQP_matrix(P,q,G_3,h_3,binary_list)
+
+        if sol["status"]!="optimal" and sol["status"]!="timelimit":
+            print("*"*1000)
+            print("this subsystem's GS cannot be conserved (mathematically impossible)")
+            print("*"*1000)
+            # sol = solvers.qp(P,q,G3_without_preserve_GS,h_3_without_preserve_GS)
+            sol = self.solve_MIQP_matrix(P,q,G3_without_preserve_GS,h_3_without_preserve_GS,binary_list)
+
+        self.ecis = np.zeros(self.N_corr)
+        self.ecis[0:self.N_corr]=sol['x'][0:self.N_corr]
+
+        if self.eci_cutoff is not None:
+            idx_del = [i for i in range(self.N_corr)
+               if i not in self.nonzero_ECIs(eci_cutoff=self.eci_cutoff)]
+            self.ecis[idx_del] = 0.0
+
+        self.compute_ce_energies()
+        self._update_ce_hull()
+
+
+    def solve_MIQP_matrix(self,P_matrix,q_matrix,G_matrix,h_3_matrix,binary_list):
+        # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
+
+        # import pickle
+        # filename='tmp.pkl'
+        # if os.path.exists(filename):
+        #     os.remove(filename)
+        #
+        # output = open(filename, 'wb')
+        # pickle.dump(P_matrix, output)
+        # pickle.dump(q_matrix, output)
+        # pickle.dump(G_matrix, output)
+        # pickle.dump(h_3_matrix, output)
+        # pickle.dump(binary_list, output)
+        # output.close()
+
+
+        try:
+            time_limit = float(self.time_limit_miqp)
+        except:
+            if G_matrix.shape[0]>G_matrix.shape[1]:
+                time_limit = 300
+            else:
+                time_limit = 10
+
+        binary_list = set(binary_list)
+        if len(q_matrix.shape)==2:
+            q_matrix = q_matrix.T[0]
+        if len(h_3_matrix.shape)==2:
+            h_3_matrix = h_3_matrix.T[0]
+
+
+        import gurobi
+        model = gurobi.Model()
+
+        vars = []
+        cols = P_matrix.shape[1]
+
+        for i in range(cols):
+            if i not in binary_list:
+               vars.append(model.addVar(lb=-gurobi.GRB.INFINITY, ub=gurobi.GRB.INFINITY, vtype=gurobi.GRB.CONTINUOUS))
+            else:
+               vars.append(model.addVar(lb=-gurobi.GRB.INFINITY, ub=gurobi.GRB.INFINITY, vtype=gurobi.GRB.BINARY))
+
+        for i in range(G_matrix.shape[0]):
+            expr = gurobi.LinExpr()
+            for j in range(G_matrix.shape[1]):
+                if G_matrix[i][j]!= 0:
+                    pass
+                    expr += G_matrix[i][j]*vars[j]
+            model.addConstr(expr, gurobi.GRB.LESS_EQUAL, h_3_matrix[i])
+
+        obj = gurobi.QuadExpr()
+        for i in range(cols):
+            for j in range(cols):
+                if P_matrix[i][j] != 0:
+                    obj += 0.5*P_matrix[i][j]*vars[i]*vars[j]
+        for j in range(cols):
+            if q_matrix[j] != 0:
+                obj += q_matrix[j]*vars[j]
+        model.setObjective(obj)
+
+        model.setParam(gurobi.GRB.Param.TimeLimit, time_limit)
+        model.optimize()
+
+        sol = {}
+        if model.status == gurobi.GRB.Status.OPTIMAL or model.status == gurobi.GRB.Status.TIME_LIMIT:
+            if model.status == gurobi.GRB.Status.OPTIMAL:
+                sol["status"] = "optimal"
+            elif model.status == gurobi.GRB.Status.TIME_LIMIT:
+                sol["status"] = "timelimit"
+            x = model.getAttr('x', vars)
+            sol['x'] = np.zeros(cols)
+            for i in range(cols):
+                sol['x'][i] = x[i]
+        else:
+            sol["status"] = model.status
+
+
+        return sol
+
+
+    def generate_QP_MIQP_matrix(self,mu=10,concentrationmin=None,
+                           concentrationmax=None,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=None,MIQP=False,big_M=200.0):
+
+        if MIQP==False:
+            big_M = 1.0
+
+        # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
         corr_in=np.array(self.correlations_in)
-        # engr_in=np.array(self.formation_energies_in)
         engr_in=np.array(self.energy_in)
         engr_in.shape=(len(engr_in),1)
-        # print("self.formation_energies_in is ")
-        # print(self.formation_energies_in)
-        # print("self.energy_in")
-        # print(self.energy_in)
-        # concentration_in=np.array(self.concentrations)
-        # concentration_in.shape=(len(concentration_in),1)
+
         weight_vec=np.array(self.structure_weight)
-        # weight_vec.shape=(len(weight_vec),1)
+
         weight_matrix= np.diag(weight_vec.transpose())
 
         P_corr_part=2*((weight_matrix.dot(corr_in)).transpose()).dot(corr_in)
-
-        # if len(self.diff_foscus_lists_of_lists)>0:
-        #     P_diff_focus_part = 0
-        #     q_diff_focus_part = 0
-        #     for list_now in self.diff_foscus_lists_of_lists:
-        #         for i in range(1,len(list_now)):
-        #             for j in range(0,i):
-        #                 corr_diff_focus_now = np.array([corr_in[list_now[i]]-corr_in[list_now[j]]]) #explicit row vector
-        #                 assert corr_diff_focus_now.shape[0] == 1
-        #                 energy_diff_now = engr_in[list_now[i]]-engr_in[list_now[j]]
-        #                 P_diff_focus_part += 2*self.DiffFocusWeight*corr_diff_focus_now.transpose().dot(corr_diff_focus_now)
-        #                 q_diff_focus_part += -2*self.DiffFocusWeight*corr_diff_focus_now.transpose()*energy_diff_now
-        #     P_corr_part += P_diff_focus_part
 
 
         if len(self.diff_foscus_lists_of_lists)>0:
@@ -1568,18 +1714,9 @@ class CESet(object):
                 if self.cluster_size[i] == 2 and self.cluster_length[i]<=self.UnCompressPairUptoDist:
                    q_z_part[i]=0
 
-
-
-            # if self.dimension < 2:
-            #     if self.cluster_size[i] == 2:
-            #        count_of_two += 1
-            #        if count_of_two == 1:
-            #            q_z_part[i]=0
-            #
-
         q=np.concatenate((q_corr_part,q_z_part),axis=0)
-        G_1=np.concatenate((np.identity(self.N_corr),-np.identity(self.N_corr)),axis=1)
-        G_2=np.concatenate((-np.identity(self.N_corr),-np.identity(self.N_corr)),axis=1)
+        G_1=np.concatenate((np.identity(self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
+        G_2=np.concatenate((-np.identity(self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
         G_3=np.concatenate((G_1,G_2),axis=0)
         G3_without_preserve_GS = G_3[:]
         h_3=np.zeros((2*self.N_corr,1))
@@ -1631,19 +1768,8 @@ class CESet(object):
             invalid_index_due_to_conc_max=self.invalid_index_due_to_conc_max
 
 
-            # print("calculating hull decomposition for every element")
-            # start=datetime.now()
-            print("self.already_compute_decomposition_data is ")
-            print(self.already_compute_decomposition_data)
             decomposition_data=self.compute_decomposition_data()
             special_decomposition_data=self.compute_special_decomposition_data()
-            # pprint("decomposition_data")
-            # pprint(decomposition_data)
-            # pprint("special_decomposition_data")
-            # pprint(special_decomposition_data)
-            # end=datetime.now()
-            # print("we spent ",end-start," time to calculate decomposition for every element, if this is too large, considered"
-            #                             "removing redundant calculations")
 
 
 
@@ -1686,246 +1812,15 @@ class CESet(object):
                     h_3=np.concatenate((h_3,small_error),axis=0)
 
 
-
-
-        P_matrix=matrix(P)
-        q_matrix=matrix(q)
-        G_3_matrix=matrix(G_3)
-        h_3_matrix=matrix(h_3)
-
-        # print (repr(hull_zip))
-
-        sol = solvers.qp(P_matrix,q_matrix,G_3_matrix,h_3_matrix)
-        if sol["status"]!="optimal":
-            print("*"*1000)
-            print("this subsystem's GS cannot be conserved (mathematically impossible)")
-            print("*"*1000)
-            G3_without_preserve_GS_matrix=matrix(G3_without_preserve_GS)
-            h_3_without_preserve_GS_matrix = matrix(h_3_without_preserve_GS)
-            sol = solvers.qp(P_matrix,q_matrix,G3_without_preserve_GS_matrix,h_3_without_preserve_GS_matrix)
-
-
-        self.ecis = np.zeros(self.N_corr)
-        self.ecis[0:self.N_corr]=sol['x'][0:self.N_corr].T
-
-        if self.eci_cutoff is not None:
-            idx_del = [i for i in range(self.N_corr)
-               if i not in self.nonzero_ECIs(eci_cutoff=self.eci_cutoff)]
-            self.ecis[idx_del] = 0.0
-
-        self.compute_ce_energies()
-        self._update_ce_hull()
-
-
-
-
-    def perform_MIQP(self,mu=10,concentrationmin=None,
-                           concentrationmax=None,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=None):
-        # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
-
-        corr_in=np.array(self.correlations_in)
-        # engr_in=np.array(self.formation_energies_in)
-        engr_in=np.array(self.energy_in)
-        engr_in.shape=(len(engr_in),1)
-        weight_vec=np.array(self.structure_weight)
-        weight_matrix= np.diag(weight_vec.transpose())
-
-        P_corr_part=2*((weight_matrix.dot(corr_in)).transpose()).dot(corr_in)
-
-
-
-        if len(self.diff_foscus_lists_of_lists)>0:
-
-            P_diff_focus_part = 0
-            q_diff_focus_part = 0
-            for index,list_now in enumerate(self.diff_foscus_lists_of_lists):
-                for i in range(1,len(list_now)):
-                    corr_diff_focus_now = np.array([corr_in[list_now[i]]-corr_in[list_now[0]]]) #explicit row vector
-                    assert corr_diff_focus_now.shape[0] == 1
-                    energy_diff_now = engr_in[list_now[i]]-engr_in[list_now[0]]
-                    P_diff_focus_part += 2*self.diff_foscus_weights_lists[index]*corr_diff_focus_now.transpose().dot(corr_diff_focus_now)
-                    q_diff_focus_part += -2*self.diff_foscus_weights_lists[index]*corr_diff_focus_now.transpose()*energy_diff_now
-            P_corr_part += P_diff_focus_part
-
-
-
-        P=np.lib.pad(P_corr_part,((0,self.N_corr),(0,self.N_corr)),mode='constant', constant_values=0)
-        # P_z_part=np.zeros(self.N_corr)
-
-        q_corr_part=-2*((weight_matrix.dot(corr_in)).transpose()).dot(engr_in)
-
-        # print("q_diff_focus_part.shape")
-        # print(q_diff_focus_part.shape)
-
-        if len(self.diff_foscus_lists_of_lists)>0:
-            q_corr_part+=q_diff_focus_part
-
-        q_z_part=np.ones((self.N_corr,1))*mu
-
-        Dim = len(self.concentrations[0])
-        count_of_two = 0
-        min_clust_length = 0
-        for i in range(len(corr_in[0])):
-            if self.cluster_size[i] < 2:
-               q_z_part[i]=0
-
-            if not self.CompressFirstPair:
-                if self.cluster_size[i] == 2:
-                   count_of_two += 1
-                   if count_of_two == 1:
-                       min_clust_length=self.cluster_length[i]
-                   if self.cluster_length[i] < min_clust_length*(1+1e-4):
-                       q_z_part[i]=0
-
-
-
-            # if self.dimension < 2:
-            #     if self.cluster_size[i] == 2:
-            #        count_of_two += 1
-            #        if count_of_two == 1:
-            #            q_z_part[i]=0
-            #
-
-        q=np.concatenate((q_corr_part,q_z_part),axis=0)
-        G_1=np.concatenate((np.identity(self.N_corr),-np.identity(self.N_corr)),axis=1)
-        G_2=np.concatenate((-np.identity(self.N_corr),-np.identity(self.N_corr)),axis=1)
-        G_3=np.concatenate((G_1,G_2),axis=0)
-        G3_without_preserve_GS = G_3[:]
-        h_3=np.zeros((2*self.N_corr,1))
-        h_3_without_preserve_GS = h_3[:]
-
-        small_error_global=self.SmallErrorOnInequality
-
-        self.add_concentration_min_max(concentrationmin,concentrationmax)
-        self.decide_valid_lists()
-
-        if AbsoluteErrorConstraintOnHull is not None:
-            hull_idx_another_approach=self.compute_hull_idx()
-            hull_idx=hull_idx_another_approach
-            for i in hull_idx:
-                if i in self.valid_index:
-                    # G_3_new_line=np.concatenate((self.correlations_in[global_index]-self.correlations_in[i],np.zeros((self.N_corr))))
-                    G_3_new_line=np.concatenate((self.correlations_in[i],np.zeros(self.N_corr)))
-                    G_3_new_line.shape=(1,2*self.N_corr)
-                    G_3=np.concatenate((G_3,G_3_new_line),axis=0)
-                    form_E_Upper=np.array(self.formation_energies_in[i]+AbsoluteErrorConstraintOnHull)
-                    form_E_Upper.shape=(1,1)
-                    h_3=np.concatenate((h_3,form_E_Upper),axis=0)
-
-                    G_3_new_line=np.concatenate((-self.correlations_in[i],np.zeros(self.N_corr)))
-                    G_3_new_line.shape=(1,2*self.N_corr)
-                    G_3=np.concatenate((G_3,G_3_new_line),axis=0)
-                    form_E_Upper=np.array(-self.formation_energies_in[i]+AbsoluteErrorConstraintOnHull)
-                    form_E_Upper.shape=(1,1)
-                    h_3=np.concatenate((h_3,form_E_Upper),axis=0)
-
-
-        if activate_GS_preservation:
-
-            hull_idx_another_approach=self.compute_hull_idx()
-            hull_idx=hull_idx_another_approach
-            hull_conc=[self.concentrations[i] for i in hull_idx]
-            hull_form_e=[self.formation_energies_in[i] for i in hull_idx]
-            hull_e_above_hull_in=[self.energy_above_hull_in[i] for i in hull_idx]
-            hull_zip=zip(hull_conc,hull_idx,hull_form_e,hull_e_above_hull_in)
-            hull_zip.sort()
-            (hull_conc,hull_idx,hull_form_e,hull_e_above_hull_in)=zip(*hull_zip)
-            # print("hull_zip is ")
-            # pprint(hull_zip,width=200)
-
-            self.decide_valid_lists()
-            valid_index=self.valid_index
-            valid_index_only_consider_conc=self.valid_index_only_consider_conc
-            invalid_index_due_to_conc_min=self.invalid_index_due_to_conc_min
-            invalid_index_due_to_conc_max=self.invalid_index_due_to_conc_max
-
-
-            # print("calculating hull decomposition for every element")
-            # start=datetime.now()
-            print("self.already_compute_decomposition_data is ")
-            print(self.already_compute_decomposition_data)
-            decomposition_data=self.compute_decomposition_data()
-            special_decomposition_data=self.compute_special_decomposition_data()
-            # pprint("decomposition_data")
-            # pprint(decomposition_data)
-            # pprint("special_decomposition_data")
-            # pprint(special_decomposition_data)
-            # end=datetime.now()
-            # print("we spent ",end-start," time to calculate decomposition for every element, if this is too large, considered"
-            #                             "removing redundant calculations")
-
-
-
-
-            for i in valid_index_only_consider_conc:
-                if i not in hull_idx:
-                    # print (i,"is not in hull_idx")
-                    decomposition_now=decomposition_data[i]
-                    array_now = 0
-                    for target_index,decomposition_value in decomposition_now.iteritems():
-                        array_now += decomposition_value*self.correlations_in[target_index]
-                    array_now -= self.correlations_in[i]
-                    G_3_new_line=np.concatenate((array_now,np.zeros(self.N_corr)))
-                    G_3_new_line.shape=(1,2*self.N_corr)
-                    G_3=np.concatenate((G_3,G_3_new_line),axis=0)
-
-                    small_error=np.array(-small_error_global) # from -4 to -3
-                    small_error.shape=(1,1)
-                    h_3=np.concatenate((h_3,small_error),axis=0)
-
-
-
-            ## now ,we would only consider the situation where data out side the desired region is not
-            ## considered at all in this GS preserving step
-
-
-            for i in hull_idx:
-                if i not in self.undecomposable_hull_idx:
-                    special_decomposition_now=special_decomposition_data[i]
-                    array_now = 0
-                    for target_index,decomposition_value in special_decomposition_now.iteritems():
-                        array_now -= decomposition_value*self.correlations_in[target_index]
-                    array_now += self.correlations_in[i]
-                    G_3_new_line=np.concatenate((array_now,np.zeros(self.N_corr)))
-                    G_3_new_line.shape=(1,2*self.N_corr)
-                    G_3=np.concatenate((G_3,G_3_new_line),axis=0)
-
-                    small_error=np.array(-small_error_global) # from -4 to -3
-                    small_error.shape=(1,1)
-                    h_3=np.concatenate((h_3,small_error),axis=0)
-
-
-
-
-        P_matrix=matrix(P)
-        q_matrix=matrix(q)
-        G_3_matrix=matrix(G_3)
-        h_3_matrix=matrix(h_3)
-
-        # print (repr(hull_zip))
-
-        sol = solvers.qp(P_matrix,q_matrix,G_3_matrix,h_3_matrix)
-        if sol["status"]!="optimal":
-            print("*"*1000)
-            print("this subsystem's GS cannot be conserved (mathematically impossible)")
-            print("*"*1000)
-            G3_without_preserve_GS_matrix=matrix(G3_without_preserve_GS)
-            h_3_without_preserve_GS_matrix = matrix(h_3_without_preserve_GS)
-            sol = solvers.qp(P_matrix,q_matrix,G3_without_preserve_GS_matrix,h_3_without_preserve_GS_matrix)
-
-
-        self.ecis = np.zeros(self.N_corr)
-        self.ecis[0:self.N_corr]=sol['x'][0:self.N_corr].T
-
-        if self.eci_cutoff is not None:
-            idx_del = [i for i in range(self.N_corr)
-               if i not in self.nonzero_ECIs(eci_cutoff=self.eci_cutoff)]
-            self.ecis[idx_del] = 0.0
-
-        self.compute_ce_energies()
-        self._update_ce_hull()
-
-
+        self.P = P
+        self.q = q
+        self.G_3 = G_3
+        self.h_3 = h_3
+        self.G3_without_preserve_GS = G3_without_preserve_GS
+        self.h_3_without_preserve_GS = h_3_without_preserve_GS
+        if MIQP :
+            binary_list = range(self.N_corr,2*self.N_corr)
+            self.binary_list = binary_list
 
 
     def add_self_eci_cutoff(self,eci_cutoff):
