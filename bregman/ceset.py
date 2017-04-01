@@ -1570,19 +1570,19 @@ class CESet(object):
     def solve_MIQP_matrix(self,P_matrix,q_matrix,G_matrix,h_3_matrix,binary_list):
         # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
 
-        if len(binary_list)>10:
-            import pickle
-            filename='tmp.pkl'
-            if os.path.exists(filename):
-                os.remove(filename)
-
-            output = open(filename, 'wb')
-            pickle.dump(P_matrix, output)
-            pickle.dump(q_matrix, output)
-            pickle.dump(G_matrix, output)
-            pickle.dump(h_3_matrix, output)
-            pickle.dump(binary_list, output)
-            output.close()
+        # if len(binary_list)>10:
+        #     import pickle
+        #     filename='tmp.pkl'
+        #     if os.path.exists(filename):
+        #         os.remove(filename)
+        #
+        #     output = open(filename, 'wb')
+        #     pickle.dump(P_matrix, output)
+        #     pickle.dump(q_matrix, output)
+        #     pickle.dump(G_matrix, output)
+        #     pickle.dump(h_3_matrix, output)
+        #     pickle.dump(binary_list, output)
+        #     output.close()
 
         try:
             time_limit = float(self.time_limit_miqp)
@@ -1590,7 +1590,8 @@ class CESet(object):
             if G_matrix.shape[0]>G_matrix.shape[1]:
                 time_limit = 300
             else:
-                time_limit = 10
+                time_limit = 100
+
         try:
             heuristics = self.heuristics
         except:
