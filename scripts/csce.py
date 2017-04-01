@@ -238,7 +238,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
 
 
-    if QP or MIQP:
+    if (QP or MIQP) and not researchonfittingmode:
         min_mu=MuStart
         max_mu=MuEnd
         mus = list(np.logspace(log(min_mu,10), log(max_mu,10), MuPartition))
