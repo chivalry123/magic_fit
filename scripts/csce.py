@@ -963,7 +963,7 @@ if (__name__ == "__main__"):
         "--CompressAllTerms",
         help="CompressAllTerms ",
         default=False,
-        type=float)
+        action="store_true")
 
 
     parser.add_argument(
