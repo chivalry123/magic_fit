@@ -43,7 +43,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
                            DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair,MIQP,
-                           UnCompressPairUptoDist):
+                           UnCompressPairUptoDist,CompressAllTerms):
 
     time_start = time.clock()
 
@@ -54,7 +54,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                    detect_redundant_clusters=(not no_detect_redundant),
                    pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName,
                    SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis,
-                   CompressFirstPair=CompressFirstPair,UnCompressPairUptoDist=UnCompressPairUptoDist)
+                   CompressFirstPair=CompressFirstPair,UnCompressPairUptoDist=UnCompressPairUptoDist,CompressAllTerms=CompressAllTerms)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -959,6 +959,31 @@ if (__name__ == "__main__"):
         default=None,
         type=float)
 
+    parser.add_argument(
+        "--CompressAllTerms",
+        help="CompressAllTerms ",
+        default=False,
+        type=float)
+
+
+    parser.add_argument(
+        "--MIQPGSPrsSolvingTime",
+        help=" MIQP GS Preservation SolvingTime   ",
+        type=float,
+        default=300)
+
+    parser.add_argument(
+        "--MIQPNonGSPrsSolvingTime",
+        help=" MIQP non GS Preservation SolvingTime   ",
+        type=float,
+        default=10)
+
+
+
+
+
+
+
 
 
     args = parser.parse_args()
@@ -1030,5 +1055,6 @@ if (__name__ == "__main__"):
                            OnlyKeppEcis=args.OnlyKeppEcis,
                            CompressFirstPair=args.CompressFirstPair,
                            MIQP=args.MIQP,
-                           UnCompressPairUptoDist=args.UnCompressPairUptoDist)
+                           UnCompressPairUptoDist=args.UnCompressPairUptoDist,
+                           CompressAllTerms=args.CompressAllTerms)
 

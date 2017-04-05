@@ -35,7 +35,9 @@ class CASMSet(CESet):
 
     def __init__(self, corr_in_file, energy_file, shift_energies=False,
                  detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None,
-                 SmallErrorOnInequality=None,OnlyKeppEcis=None,CompressFirstPair=None,UnCompressPairUptoDist=None):
+                 SmallErrorOnInequality=None,OnlyKeppEcis=None,CompressFirstPair=None,UnCompressPairUptoDist=None,
+                 CompressAllTerms=None):
+        self.CompressAllTerms = CompressAllTerms
         self.UnCompressPairUptoDist=UnCompressPairUptoDist
         self.SmallErrorOnInequality=SmallErrorOnInequality
         self.corr_in_file = corr_in_file
@@ -285,7 +287,7 @@ class CASMSet_WX_create_sub(CESet):
                  detect_redundant_clusters=True, pca=False):
         self.UnCompressPairUptoDist = grand_casm.UnCompressPairUptoDist
         self.CompressFirstPair=grand_casm.CompressFirstPair
-
+        self.CompressAllTerms=grand_casm.CompressAllTerms
         self.only_kept_ecis_list = grand_casm.only_kept_ecis_list
         try:
             self.diff_foscus_weights_lists=grand_casm.diff_foscus_weights_lists
