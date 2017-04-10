@@ -2047,3 +2047,4 @@ class CESet(object):
         hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-8)[0]
         self.hull_idx = hull_idx_another_approach
         return hull_idx_another_approach
+

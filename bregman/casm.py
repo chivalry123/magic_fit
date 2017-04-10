@@ -36,7 +36,18 @@ class CASMSet(CESet):
     def __init__(self, corr_in_file, energy_file, shift_energies=False,
                  detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None,
                  SmallErrorOnInequality=None,OnlyKeppEcis=None,CompressFirstPair=None,UnCompressPairUptoDist=None,
-                 CompressAllTerms=None):
+                 CompressAllTerms=None,MIQPGSPrsSolvingTime=None,MIQPNonGSPrsSolvingTime=None,L0L1=None,
+                 L0Hierarchy=None,L1Hierarchy=None,MaxNumClusts=None,L0mu=None):
+
+        self.L0mu = L0mu
+        self.MIQPGSPrsSolvingTime=MIQPGSPrsSolvingTime
+        self.MIQPNonGSPrsSolvingTime=MIQPNonGSPrsSolvingTime
+        self.L0L1=L0L1
+        self.L0Hierarchy=L0Hierarchy
+        self.L1Hierarchy=L1Hierarchy
+        self.MaxNumClusts=MaxNumClusts
+
+
         self.CompressAllTerms = CompressAllTerms
         self.UnCompressPairUptoDist=UnCompressPairUptoDist
         self.SmallErrorOnInequality=SmallErrorOnInequality
@@ -285,6 +296,15 @@ class CASMSet(CESet):
 class CASMSet_WX_create_sub(CESet):
     def __init__(self, grand_casm, indexes_to_use ,shift_energies=False,
                  detect_redundant_clusters=True, pca=False):
+
+        self.MIQPGSPrsSolvingTime=grand_casm.MIQPGSPrsSolvingTime
+        self.MIQPNonGSPrsSolvingTime=grand_casm.MIQPNonGSPrsSolvingTime
+        self.L0L1=grand_casm.L0L1
+        self.L0Hierarchy=grand_casm.L0Hierarchy
+        self.L1Hierarchy=grand_casm.L1Hierarchy
+        self.MaxNumClusts=grand_casm.MaxNumClusts
+        self.L0mu = grand_casm.L0mu
+
         self.UnCompressPairUptoDist = grand_casm.UnCompressPairUptoDist
         self.CompressFirstPair=grand_casm.CompressFirstPair
         self.CompressAllTerms=grand_casm.CompressAllTerms

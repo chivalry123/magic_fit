@@ -43,7 +43,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
                            DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair,MIQP,
-                           UnCompressPairUptoDist,CompressAllTerms):
+                           UnCompressPairUptoDist,CompressAllTerms,MIQPGSPrsSolvingTime,MIQPNonGSPrsSolvingTime,L0L1,L0Hierarchy,L1Hierarchy,MaxNumClusts,L0mu):
 
     time_start = time.clock()
 
@@ -54,7 +54,9 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                    detect_redundant_clusters=(not no_detect_redundant),
                    pca=do_pca,DiffFocus=DiffFocus,DiffFocusWeight=DiffFocusWeight,DiffFocusName=DiffFocusName,
                    SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis,
-                   CompressFirstPair=CompressFirstPair,UnCompressPairUptoDist=UnCompressPairUptoDist,CompressAllTerms=CompressAllTerms)
+                   CompressFirstPair=CompressFirstPair,UnCompressPairUptoDist=UnCompressPairUptoDist,CompressAllTerms=CompressAllTerms,
+                   MIQPGSPrsSolvingTime=MIQPGSPrsSolvingTime,MIQPNonGSPrsSolvingTime=MIQPNonGSPrsSolvingTime,L0L1=L0L1,
+                   L0Hierarchy=L0Hierarchy,L1Hierarchy=L1Hierarchy,MaxNumClusts=MaxNumClusts,L0mu=L0mu)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -965,7 +967,6 @@ if (__name__ == "__main__"):
         default=False,
         action="store_true")
 
-
     parser.add_argument(
         "--MIQPGSPrsSolvingTime",
         help=" MIQP GS Preservation SolvingTime   ",
@@ -976,12 +977,38 @@ if (__name__ == "__main__"):
         "--MIQPNonGSPrsSolvingTime",
         help=" MIQP non GS Preservation SolvingTime   ",
         type=float,
-        default=10)
+        default=100)
+
+    parser.add_argument(
+        "--L0L1",
+        help="Implement both l0 and l1 norm ",
+        default=False,
+        action="store_true")
 
 
+    parser.add_argument(
+        "--L0Hierarchy",
+        help="L0 Hierarchy parent larger than  L0Hierarchy*child, L0 should just be 1",
+        default=None,
+        type=float)
 
+    parser.add_argument(
+        "--L1Hierarchy",
+        help="L1 Hierarchy parent larger than  L1Hierarchy*child ",
+        default=None,
+        type=float)
 
+    parser.add_argument(
+        "--MaxNumClusts",
+        help="maximum number of clusters",
+        default=None,
+        type=int)
 
+    parser.add_argument(
+        "--L0mu",
+        help="L0 mu ",
+        default=None,
+        type=float)
 
 
 
@@ -995,10 +1022,15 @@ if (__name__ == "__main__"):
     if args.concentrationmax is not None:
         args.concentrationmax = np.array(tuple((eval(args.concentrationmax),)))
 
+
     print("args.concentrationmin is")
     print(args.concentrationmin)
     print("args.concentrationmax is")
     print(repr(args.concentrationmax))
+
+    print("setting MIQP to be true since you set L0L1 is true")
+    if args.L0L1:
+        args.MIQP = True
 
 
 
@@ -1056,5 +1088,12 @@ if (__name__ == "__main__"):
                            CompressFirstPair=args.CompressFirstPair,
                            MIQP=args.MIQP,
                            UnCompressPairUptoDist=args.UnCompressPairUptoDist,
-                           CompressAllTerms=args.CompressAllTerms)
+                           CompressAllTerms=args.CompressAllTerms,
+                           MIQPGSPrsSolvingTime=args.MIQPGSPrsSolvingTime,
+                           MIQPNonGSPrsSolvingTime=args.MIQPNonGSPrsSolvingTime,
+                           L0L1=args.L0L1,
+                           L0Hierarchy=args.L0Hierarchy,
+                           L1Hierarchy=args.L1Hierarchy,
+                           MaxNumClusts=args.MaxNumClusts,
+                           L0mu=args.L0mu)
 
