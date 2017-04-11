@@ -1663,6 +1663,10 @@ class CESet(object):
         if MIQP==False:
             big_M = 1.0
 
+        L0L1 = self.L0L1
+        L0mu = self.L0mu
+
+
         # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
         corr_in=np.array(self.correlations_in)
         engr_in=np.array(self.energy_in)
@@ -1725,17 +1729,19 @@ class CESet(object):
                        q_z_part[i]=0
 
         q=np.concatenate((q_corr_part,q_z_part),axis=0)
-        G_1=np.concatenate((np.identity(self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
-        G_2=np.concatenate((-np.identity(self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
+        # G_1=np.concatenate((np.identity(self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
+        # G_2=np.concatenate((-np.identity(self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
+        G_1=np.concatenate((np.identity(self.N_corr),-np.identity(self.N_corr)),axis=1)
+        G_2=np.concatenate((-np.identity(self.N_corr),-np.identity(self.N_corr)),axis=1)
         G_3=np.concatenate((G_1,G_2),axis=0)
         G3_without_preserve_GS = G_3[:]
         h_3=np.zeros((2*self.N_corr,1))
         h_3_without_preserve_GS = h_3[:]
 
         small_error_global=self.SmallErrorOnInequality
-
         self.add_concentration_min_max(concentrationmin,concentrationmax)
         self.decide_valid_lists()
+
 
         if AbsoluteErrorConstraintOnHull is not None:
             hull_idx_another_approach=self.compute_hull_idx()
@@ -1746,17 +1752,26 @@ class CESet(object):
                     G_3_new_line=np.concatenate((self.correlations_in[i],np.zeros(self.N_corr)))
                     G_3_new_line.shape=(1,2*self.N_corr)
                     G_3=np.concatenate((G_3,G_3_new_line),axis=0)
+                    G3_without_preserve_GS=np.concatenate((G3_without_preserve_GS,G_3_new_line),axis=0)
                     form_E_Upper=np.array(self.formation_energies_in[i]+AbsoluteErrorConstraintOnHull)
                     form_E_Upper.shape=(1,1)
                     h_3=np.concatenate((h_3,form_E_Upper),axis=0)
+                    h_3_without_preserve_GS=np.concatenate((h_3_without_preserve_GS,form_E_Upper),axis=0)
+
 
                     G_3_new_line=np.concatenate((-self.correlations_in[i],np.zeros(self.N_corr)))
                     G_3_new_line.shape=(1,2*self.N_corr)
                     G_3=np.concatenate((G_3,G_3_new_line),axis=0)
+                    G3_without_preserve_GS=np.concatenate((G3_without_preserve_GS,G_3_new_line),axis=0)
                     form_E_Upper=np.array(-self.formation_energies_in[i]+AbsoluteErrorConstraintOnHull)
                     form_E_Upper.shape=(1,1)
                     h_3=np.concatenate((h_3,form_E_Upper),axis=0)
+                    h_3_without_preserve_GS=np.concatenate((h_3_without_preserve_GS,form_E_Upper),axis=0)
 
+
+
+        G_3_GS_preservation_part = np.array([])
+        h_3_GS_preservation_part = np.array([])
 
         if activate_GS_preservation:
 
@@ -1795,16 +1810,22 @@ class CESet(object):
                     G_3_new_line=np.concatenate((array_now,np.zeros(self.N_corr)))
                     G_3_new_line.shape=(1,2*self.N_corr)
                     G_3=np.concatenate((G_3,G_3_new_line),axis=0)
+                    if G_3_GS_preservation_part.size:
+                        G_3_GS_preservation_part = np.concatenate((G_3_GS_preservation_part,G_3_new_line),axis=0)
+                    else:
+                        G_3_GS_preservation_part = G_3_new_line
+
 
                     small_error=np.array(-small_error_global) # from -4 to -3
                     small_error.shape=(1,1)
                     h_3=np.concatenate((h_3,small_error),axis=0)
-
-
+                    if h_3_GS_preservation_part.size:
+                        h_3_GS_preservation_part = np.concatenate((h_3_GS_preservation_part,small_error),axis=0)
+                    else:
+                        h_3_GS_preservation_part = small_error
 
             ## now ,we would only consider the situation where data out side the desired region is not
             ## considered at all in this GS preserving step
-
 
             for i in hull_idx:
                 if i not in self.undecomposable_hull_idx:
@@ -1816,10 +1837,45 @@ class CESet(object):
                     G_3_new_line=np.concatenate((array_now,np.zeros(self.N_corr)))
                     G_3_new_line.shape=(1,2*self.N_corr)
                     G_3=np.concatenate((G_3,G_3_new_line),axis=0)
+                    G_3_GS_preservation_part = np.concatenate((G_3_GS_preservation_part,G_3_new_line),axis=0)
 
                     small_error=np.array(-small_error_global) # from -4 to -3
                     small_error.shape=(1,1)
                     h_3=np.concatenate((h_3,small_error),axis=0)
+                    h_3_GS_preservation_part = np.concatenate((h_3_GS_preservation_part,small_error),axis=0)
+
+
+        if MIQP:
+
+            P = np.lib.pad(P,((0,self.N_corr),(0,self.N_corr)),mode='constant', constant_values=0)
+            q_integer_part = np.ones((self.N_corr,1))*L0mu
+            q = np.concatenate((q,q_integer_part),axis=0)
+
+            G_1_integer=np.concatenate((np.identity(self.N_corr),np.zeros(self.N_corr,self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
+            G_2_integer=np.concatenate((-np.identity(self.N_corr),np.zeros(self.N_corr,self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
+            G_3_integer=np.concatenate((G_1_integer,G_2_integer),axis=0)
+
+            G3_without_preserve_GS = np.lib.pad(G3_without_preserve_GS,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
+            G3_without_preserve_GS = np.concatenate((G3_without_preserve_GS,G_3_integer),axis=0)
+
+            h_3_without_preserve_GS = np.concatenate((h_3_without_preserve_GS,np.zeros((2*self.N_corr,1))),axis=0)
+
+            G_3 = np.lib.pad(G3_without_preserve_GS,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
+            G_3 = np.concatenate((G_3,G_3_integer),axis=0)
+
+            h_3 = np.concatenate((h_3,np.zeros((2*self.N_corr,1))),axis=0)
+
+            binary_list = range(2*self.N_corr,3*self.N_corr)
+            self.binary_list = binary_list
+
+
+
+        if MIQP and activate_GS_preservation:
+            self.matrix_type = "L0L1GS"
+        elif MIQP and not activate_GS_preservation:
+            self.matrix_type = "L0L1nonGS"
+        elif not MIQP and  activate_GS_preservation:
+            self.matrix_type = ""
 
 
         self.P = P
@@ -1828,9 +1884,6 @@ class CESet(object):
         self.h_3 = h_3
         self.G3_without_preserve_GS = G3_without_preserve_GS
         self.h_3_without_preserve_GS = h_3_without_preserve_GS
-        if MIQP :
-            binary_list = range(self.N_corr,2*self.N_corr)
-            self.binary_list = binary_list
 
 
     def add_self_eci_cutoff(self,eci_cutoff):

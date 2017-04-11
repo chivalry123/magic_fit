@@ -936,7 +936,7 @@ if (__name__ == "__main__"):
         "--SmallErrorOnInequality",
         help=" The small error on the inequality   ",
         type=float,
-        default=1e-3)
+        default=1e-4)
 
     parser.add_argument(
         "--OnlyKeppEcis",
