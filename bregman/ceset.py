@@ -1541,6 +1541,10 @@ class CESet(object):
         h_3_without_preserve_GS = self.h_3_without_preserve_GS
         binary_list = self.binary_list
 
+        # print("in performing MIQP ")
+        # print("P.shape")
+        # print(P.shape)
+
         # print (repr(hull_zip))
 
         # sol = solvers.qp(P_matrix,q_matrix,G_3_matrix,h_3_matrix)
@@ -1584,13 +1588,20 @@ class CESet(object):
         #     pickle.dump(binary_list, output)
         #     output.close()
 
-        try:
-            time_limit = float(self.time_limit_miqp)
-        except:
-            if G_matrix.shape[0]>G_matrix.shape[1]:
-                time_limit = 300
-            else:
-                time_limit = 100
+        # try:
+        #     time_limit = float(self.time_limit_miqp)
+        # except:
+        #     if G_matrix.shape[0]>G_matrix.shape[1]*2:
+        #         time_limit = 300
+        #     else:
+        #         time_limit = 100
+
+
+        if "prGS" in self.matrix_type:
+            time_limit = self.MIQPGSPrsSolvingTime
+        else:
+            time_limit = self.MIQPNonGSPrsSolvingTime
+
 
         try:
             heuristics = self.heuristics
@@ -1607,6 +1618,8 @@ class CESet(object):
 
         import gurobi
         model = gurobi.Model()
+
+        # print("using Gurobi for MIQP matrix")
 
         vars = []
         cols = P_matrix.shape[1]
@@ -1665,7 +1678,7 @@ class CESet(object):
 
         L0L1 = self.L0L1
         L0mu = self.L0mu
-
+        print("mu is ",mu)
 
         # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
         corr_in=np.array(self.correlations_in)
@@ -1851,8 +1864,12 @@ class CESet(object):
             q_integer_part = np.ones((self.N_corr,1))*L0mu
             q = np.concatenate((q,q_integer_part),axis=0)
 
-            G_1_integer=np.concatenate((np.identity(self.N_corr),np.zeros(self.N_corr,self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
-            G_2_integer=np.concatenate((-np.identity(self.N_corr),np.zeros(self.N_corr,self.N_corr),-np.identity(self.N_corr)*big_M),axis=1)
+            # np.identity(self.N_corr)
+            # np.zeros(self.N_corr,self.N_corr)
+            # -np.identity(self.N_corr)*big_M
+
+            G_1_integer=np.concatenate((np.identity(self.N_corr),np.zeros((self.N_corr,self.N_corr)),-np.identity(self.N_corr)*big_M),axis=1)
+            G_2_integer=np.concatenate((-np.identity(self.N_corr),np.zeros((self.N_corr,self.N_corr)),-np.identity(self.N_corr)*big_M),axis=1)
             G_3_integer=np.concatenate((G_1_integer,G_2_integer),axis=0)
 
             G3_without_preserve_GS = np.lib.pad(G3_without_preserve_GS,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
@@ -1860,7 +1877,11 @@ class CESet(object):
 
             h_3_without_preserve_GS = np.concatenate((h_3_without_preserve_GS,np.zeros((2*self.N_corr,1))),axis=0)
 
-            G_3 = np.lib.pad(G3_without_preserve_GS,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
+            G_3 = np.lib.pad(G_3,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
+
+            # print(G_3.shape)
+            # print(G_3_integer.shape)
+
             G_3 = np.concatenate((G_3,G_3_integer),axis=0)
 
             h_3 = np.concatenate((h_3,np.zeros((2*self.N_corr,1))),axis=0)
@@ -1871,12 +1892,13 @@ class CESet(object):
 
 
         if MIQP and activate_GS_preservation:
-            self.matrix_type = "L0L1GS"
+            self.matrix_type = "L0L1prGS"
         elif MIQP and not activate_GS_preservation:
             self.matrix_type = "L0L1nonGS"
         elif not MIQP and  activate_GS_preservation:
-            self.matrix_type = ""
-
+            self.matrix_type = "L1prGS"
+        elif not MIQP and not activate_GS_preservation:
+            self.matrix_type = "L1nonGS"
 
         self.P = P
         self.q = q

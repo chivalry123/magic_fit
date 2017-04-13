@@ -1028,8 +1028,9 @@ if (__name__ == "__main__"):
     print("args.concentrationmax is")
     print(repr(args.concentrationmax))
 
-    print("setting MIQP to be true since you set L0L1 is true")
     if args.L0L1:
+        print("setting MIQP to be true since you set L0L1 is true")
+
         args.MIQP = True
 
 
