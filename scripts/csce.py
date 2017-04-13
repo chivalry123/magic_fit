@@ -281,33 +281,33 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                 num_non_zero_eci_list.append(num_non_zero_eci_now)
                 print ("mu_now, weighted_rmse_now, none-weighted_rmse_now , num_non_zero_eci_now is",mu_now, rmse_no_hypo_weighted, rmse_no_hypo_no_weight, num_non_zero_eci_now)
 
-            if MIQP :
-                casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
-                           concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
-            else:
-                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
-                           concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
-
-
-            # casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
-            #                    concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
-            idx_del = [i for i in range(casm.N_corr)
-                       if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
-            casm.ecis[idx_del] = 0.0
-            E_all = casm.compute_ce_energies()
-            (rmse_all, mue_all, mse_all, rmse_noW,rmse_no_hypo_no_weight,rmse_no_hypo_weighted
-             ) = casm.compute_ce_errors(ce_energies=E_all,concentrationmin=concentrationmin,concentrationmax=concentrationmax,weighted_rmse_no_hypo=True)
-            idx_all = casm.nonzero_ECIs()
-            print ("without GS preservation")
-            print("             RMSE_no_hypo_weighted        RMSE_no_hypo_noW       RMSE              "
-              "RMSE (no wght)    MAE               ME")
-            print(" %15s    %15.8f    %15.8f        %15.8f   %15.8f   %15.8f   %15.8f"
-                  % ("{} clusters".format(len(idx_all)),rmse_no_hypo_weighted,rmse_no_hypo_no_weight, rmse_all, rmse_noW,
-                     mue_all, mse_all))
-
-
-
-            print ("with GS preservation")
+            # if MIQP :
+            #     casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
+            #                concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            # else:
+            #     casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+            #                concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            #
+            #
+            # # casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+            # #                    concentrationmax=concentrationmax,activate_GS_preservation=False,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+            # idx_del = [i for i in range(casm.N_corr)
+            #            if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
+            # casm.ecis[idx_del] = 0.0
+            # E_all = casm.compute_ce_energies()
+            # (rmse_all, mue_all, mse_all, rmse_noW,rmse_no_hypo_no_weight,rmse_no_hypo_weighted
+            #  ) = casm.compute_ce_errors(ce_energies=E_all,concentrationmin=concentrationmin,concentrationmax=concentrationmax,weighted_rmse_no_hypo=True)
+            # idx_all = casm.nonzero_ECIs()
+            # print ("without GS preservation")
+            # print("             RMSE_no_hypo_weighted        RMSE_no_hypo_noW       RMSE              "
+            #   "RMSE (no wght)    MAE               ME")
+            # print(" %15s    %15.8f    %15.8f        %15.8f   %15.8f   %15.8f   %15.8f"
+            #       % ("{} clusters".format(len(idx_all)),rmse_no_hypo_weighted,rmse_no_hypo_no_weight, rmse_all, rmse_noW,
+            #          mue_all, mse_all))
+            #
+            #
+            #
+            # print ("with GS preservation")
 
 
             for i in range(len(mus)):
@@ -340,35 +340,35 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                 print ("mu_now, weighted_rmse_now, none-weighted_rmse_now , num_non_zero_eci_now is",mu_now, rmse_no_hypo_weighted, rmse_no_hypo_no_weight, num_non_zero_eci_now)
 
 
-        if researchonfittingmodeWeightadjusting:
-            casm.add_self_eci_cutoff(eci_cutoff=eci_cutoff)
-            casm.perform_weight_adjusting_algo_incremental(mu=mu,concentrationmin=concentrationmin,
-                   concentrationmax=concentrationmax)
-
-        else:
-            if MIQP:
-                casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
-                                   concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
-            elif QP:
-                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
-                                   concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
-
-
-
-
-        idx_del = [i for i in range(casm.N_corr)
-                   if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
-        casm.ecis[idx_del] = 0.0
-        E_all = casm.compute_ce_energies()
-        (rmse_all, mue_all, mse_all, rmse_noW,rmse_no_hypo_no_weight,rmse_no_hypo_weighted
-         ) = casm.compute_ce_errors(ce_energies=E_all,concentrationmin=concentrationmin,concentrationmax=concentrationmax,weighted_rmse_no_hypo=True)
-        idx_all = casm.nonzero_ECIs()
-        print ("with GS preservation")
-        print ("             RMSE_no_hypo_weighted        RMSE_no_hypo_noW       RMSE              "
-          "RMSE (no wght)    MAE               ME")
-        print (" %15s    %15.8f    %15.8f        %15.8f   %15.8f   %15.8f   %15.8f"
-              % ("{} clusters".format(len(idx_all)),rmse_no_hypo_weighted,rmse_no_hypo_no_weight, rmse_all, rmse_noW,
-                 mue_all, mse_all))
+        # if researchonfittingmodeWeightadjusting:
+        #     casm.add_self_eci_cutoff(eci_cutoff=eci_cutoff)
+        #     casm.perform_weight_adjusting_algo_incremental(mu=mu,concentrationmin=concentrationmin,
+        #            concentrationmax=concentrationmax)
+        #
+        # else:
+        #     if MIQP:
+        #         casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
+        #                            concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+        #     elif QP:
+        #         casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
+        #                            concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+        #
+        #
+        #
+        #
+        # idx_del = [i for i in range(casm.N_corr)
+        #            if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
+        # casm.ecis[idx_del] = 0.0
+        # E_all = casm.compute_ce_energies()
+        # (rmse_all, mue_all, mse_all, rmse_noW,rmse_no_hypo_no_weight,rmse_no_hypo_weighted
+        #  ) = casm.compute_ce_errors(ce_energies=E_all,concentrationmin=concentrationmin,concentrationmax=concentrationmax,weighted_rmse_no_hypo=True)
+        # idx_all = casm.nonzero_ECIs()
+        # print ("with GS preservation")
+        # print ("             RMSE_no_hypo_weighted        RMSE_no_hypo_noW       RMSE              "
+        #   "RMSE (no wght)    MAE               ME")
+        # print (" %15s    %15.8f    %15.8f        %15.8f   %15.8f   %15.8f   %15.8f"
+        #       % ("{} clusters".format(len(idx_all)),rmse_no_hypo_weighted,rmse_no_hypo_no_weight, rmse_all, rmse_noW,
+        #          mue_all, mse_all))
 
 
 
@@ -551,11 +551,11 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
         do_not_want_error=True
         if do_not_want_error:
             if MIQP:
-                casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
-                   concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+                casm.perform_MIQP(mu=mu,concentrationmin=concentrationmin,
+                   concentrationmax=concentrationmax,activate_GS_preservation=(not deactivate),AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
             else:
                 casm.perform_QP(mu=mu,concentrationmin=concentrationmin,
-                       concentrationmax=concentrationmax,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
+                       concentrationmax=concentrationmax,activate_GS_preservation=(not deactivate),AbsoluteErrorConstraintOnHull=AbsoluteErrorConstraintOnHull)
             idx_del = [i for i in range(casm.N_corr)
                        if i not in casm.nonzero_ECIs(eci_cutoff=eci_cutoff)]
             casm.ecis[idx_del] = 0.0
@@ -563,7 +563,10 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
             (rmse_all, mue_all, mse_all, rmse_noW,rmse_no_hypo_no_weight,rmse_no_hypo_weighted
              ) = casm.compute_ce_errors(ce_energies=E_all,concentrationmin=concentrationmin,concentrationmax=concentrationmax,weighted_rmse_no_hypo=True)
             idx_all = casm.nonzero_ECIs()
-            print ("with GS preservation")
+            if (not deactivate):
+                print ("with GS preservation")
+            elif deactivate:
+                print("without GS preservation")
             print ("             RMSE_no_hypo_weighted        RMSE_no_hypo_noW       RMSE              "
               "RMSE (no wght)    MAE               ME")
             print (" %15s    %15.8f    %15.8f        %15.8f   %15.8f   %15.8f   %15.8f"

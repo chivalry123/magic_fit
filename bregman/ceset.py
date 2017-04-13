@@ -1871,11 +1871,19 @@ class CESet(object):
             G_1_integer=np.concatenate((np.identity(self.N_corr),np.zeros((self.N_corr,self.N_corr)),-np.identity(self.N_corr)*big_M),axis=1)
             G_2_integer=np.concatenate((-np.identity(self.N_corr),np.zeros((self.N_corr,self.N_corr)),-np.identity(self.N_corr)*big_M),axis=1)
             G_3_integer=np.concatenate((G_1_integer,G_2_integer),axis=0)
+            h_3_integer=np.zeros((2*self.N_corr,1))
+
+
+            if self.MaxNumClusts is not None:
+                G_3_integer_new_line = np.concatenate((np.zeros((1,self.N_corr*2)),np.ones((1,self.N_corr))),axis=1)
+                h_3_integer_new_line = np.ones((1,1))*self.MaxNumClusts
+                G_3_integer = np.concatenate((G_3_integer,G_3_integer_new_line),axis=0)
+                h_3_integer = np.concatenate((h_3_integer,h_3_integer_new_line),axis=0)
 
             G3_without_preserve_GS = np.lib.pad(G3_without_preserve_GS,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
             G3_without_preserve_GS = np.concatenate((G3_without_preserve_GS,G_3_integer),axis=0)
 
-            h_3_without_preserve_GS = np.concatenate((h_3_without_preserve_GS,np.zeros((2*self.N_corr,1))),axis=0)
+            h_3_without_preserve_GS = np.concatenate((h_3_without_preserve_GS,h_3_integer),axis=0)
 
             G_3 = np.lib.pad(G_3,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
 
@@ -1883,8 +1891,7 @@ class CESet(object):
             # print(G_3_integer.shape)
 
             G_3 = np.concatenate((G_3,G_3_integer),axis=0)
-
-            h_3 = np.concatenate((h_3,np.zeros((2*self.N_corr,1))),axis=0)
+            h_3 = np.concatenate((h_3,h_3_integer),axis=0)
 
             binary_list = range(2*self.N_corr,3*self.N_corr)
             self.binary_list = binary_list
