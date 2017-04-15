@@ -1005,7 +1005,16 @@ class CESet(object):
             points = np.concatenate((concentrations,
                                      np.array([energies]).T), axis=1)
 
-        hull = ConvexHull(points)
+        try:
+            hull = ConvexHull(points)
+        except:
+            print("error in convex hull of points")
+            print("let's see what is concentration and energy")
+            zipped_conc_energ = zip(list(concentrations),list(energies))
+            zipped_conc_energ.sort()
+            pprint(zipped_conc_energ)
+            self.convexhull_error = True
+            # exit()
         E_above_hull = []
         for i, conc in enumerate(concentrations):
             E = energies[i]
@@ -1567,8 +1576,14 @@ class CESet(object):
                if i not in self.nonzero_ECIs(eci_cutoff=self.eci_cutoff)]
             self.ecis[idx_del] = 0.0
 
+        self.convexhull_error = False
         self.compute_ce_energies()
         self._update_ce_hull()
+
+
+        if self.convexhull_error:
+            print("ECIs is")
+            print(self.ecis)
 
 
     def solve_MIQP_matrix(self,P_matrix,q_matrix,G_matrix,h_3_matrix,binary_list):
@@ -1646,11 +1661,22 @@ class CESet(object):
         for j in range(cols):
             if q_matrix[j] != 0:
                 obj += q_matrix[j]*vars[j]
+        obj += self.constant_term
         model.setObjective(obj)
 
-        model.setParam(gurobi.GRB.Param.OutputFlag, False)
-        model.setParam(gurobi.GRB.Param.TimeLimit, time_limit)
+        model.setParam(gurobi.GRB.Param.TuneTimeLimit, 3000)
+        model.setParam(gurobi.GRB.Param.TuneCriterion, 2)
+        model.setParam(gurobi.GRB.Param.TuneTrials, 2)
+
+
+        model.setParam(gurobi.GRB.Param.OutputFlag, True)
         model.setParam(gurobi.GRB.Param.Heuristics, heuristics)
+        model.setParam(gurobi.GRB.Param.MIPFocus, 1)
+
+        # model.tune()
+
+        model.setParam(gurobi.GRB.Param.TimeLimit, time_limit)
+
 
         model.optimize()
 
@@ -1671,14 +1697,14 @@ class CESet(object):
 
 
     def generate_QP_MIQP_matrix(self,mu=10,concentrationmin=None,
-                           concentrationmax=None,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=None,MIQP=False,big_M=200.0):
+                           concentrationmax=None,activate_GS_preservation=True,AbsoluteErrorConstraintOnHull=None,MIQP=False,big_M=20.0):
 
         if MIQP==False:
             big_M = 1.0
 
         L0L1 = self.L0L1
         L0mu = self.L0mu
-        print("mu is ",mu)
+        # print("mu is ",mu)
 
         # formulation is min 1/2 x'Px+ q'x s.t.: Gx<=h, Ax=b
         corr_in=np.array(self.correlations_in)
@@ -1858,6 +1884,10 @@ class CESet(object):
                     h_3_GS_preservation_part = np.concatenate((h_3_GS_preservation_part,small_error),axis=0)
 
 
+        W_dot_E = weight_matrix.dot(engr_in)
+        self.constant_term = W_dot_E.T.dot(engr_in)
+        # print("self.constant_term")
+        # print(self.constant_term)
         if MIQP:
 
             P = np.lib.pad(P,((0,self.N_corr),(0,self.N_corr)),mode='constant', constant_values=0)
@@ -1879,6 +1909,18 @@ class CESet(object):
                 h_3_integer_new_line = np.ones((1,1))*self.MaxNumClusts
                 G_3_integer = np.concatenate((G_3_integer,G_3_integer_new_line),axis=0)
                 h_3_integer = np.concatenate((h_3_integer,h_3_integer_new_line),axis=0)
+
+            if self.L0Hierarchy is not None:
+                print("adding L0Hierarchy now")
+                for child_idx, list_tmp in enumerate(self.cluster_hierarchy):
+                    for parent_idx in list_tmp:
+                        G_3_integer_new_line = np.zeros((1,self.N_corr))
+                        G_3_integer_new_line[0][parent_idx] = -1
+                        G_3_integer_new_line[0][child_idx] = 1
+                        G_3_integer_new_line = np.concatenate((np.zeros((1,self.N_corr*2)),G_3_integer_new_line),axis=1)
+                        h_3_integer_new_line = np.zeros((1,1))
+                        G_3_integer = np.concatenate((G_3_integer,G_3_integer_new_line),axis=0)
+                        h_3_integer = np.concatenate((h_3_integer,h_3_integer_new_line),axis=0)
 
             G3_without_preserve_GS = np.lib.pad(G3_without_preserve_GS,((0,0),(0,self.N_corr)),mode='constant', constant_values=0)
             G3_without_preserve_GS = np.concatenate((G3_without_preserve_GS,G_3_integer),axis=0)

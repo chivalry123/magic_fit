@@ -78,8 +78,11 @@ class CASMSet(CESet):
         self.cluster_multiplicity=[]
         self.cluster_size=[]
         self.cluster_length=[]
-
+        self.cluster_hierarchy = []
         self.read_eci_in_to_determine_multiplicity()
+        # print("self.cluster_hierarchy is")
+        # print(self.cluster_hierarchy)
+
         self.diff_foscus_lists_of_lists=[]
 
         self.DiffFocusWeight=DiffFocusWeight
@@ -285,6 +288,19 @@ class CASMSet(CESet):
                 self.cluster_size.append(size)
                 self.cluster_length.append(length)
 
+                hierarchy_line = map(int, line.split()[5:])
+                hierarchy_now = []
+                # print("hierarchy_line is ")
+                # print(hierarchy_line)
+                if len(hierarchy_line)>0:
+                    for j in hierarchy_line[1:]:
+                        # print("i is"+str(i)+" size_now_is "+str(size)," self.cluster_size[j] is ",self.cluster_size[j])
+                        if self.cluster_size[j]<size:
+                            hierarchy_now.append(j)
+
+                # print("hierarchy_now is ")
+                # print(hierarchy_now)
+                self.cluster_hierarchy.append(hierarchy_now)
                 old_i = i
 
 
@@ -328,6 +344,7 @@ class CASMSet_WX_create_sub(CESet):
         self.cluster_multiplicity=grand_casm.cluster_multiplicity
         self.cluster_size=grand_casm.cluster_size
         self.cluster_length = grand_casm.cluster_length
+        self.cluster_hierarchy = grand_casm.cluster_hierarchy
         diff_foscus_lists_of_lists_tmp = grand_casm.diff_foscus_lists_of_lists
         self.diff_foscus_lists_of_lists=self.map_lists_of_lists_to_new_list_of_list(indexes_to_use,diff_foscus_lists_of_lists_tmp)
         self.DiffFocusWeight=grand_casm.DiffFocusWeight

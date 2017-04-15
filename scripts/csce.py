@@ -980,7 +980,7 @@ if (__name__ == "__main__"):
         "--MIQPNonGSPrsSolvingTime",
         help=" MIQP non GS Preservation SolvingTime   ",
         type=float,
-        default=100)
+        default=300)
 
     parser.add_argument(
         "--L0L1",
