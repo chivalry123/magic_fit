@@ -412,6 +412,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
         mus = list(np.logspace(log(min_mu,10), log(max_mu,10), MuPartition))
         avg_out_of_sample_rmse_list=[]
         rms_out_of_sample_rmse_list=[]
+        avg_num_non_zero_eci_list=[]
         preservation_succeed=[]
 
         debug_now=False
@@ -495,7 +496,6 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                  ) = complement_casm.compute_ce_errors(ce_energies=E_all,concentrationmin=concentrationmin,concentrationmax=concentrationmax,weighted_rmse_no_hypo=True)
                 idx_all = complement_casm.nonzero_ECIs()
 
-
                 # print("I am debugging now !")
                 # print("complement_casm.ecis.shape is",complement_casm.ecis.shape)
                 # print("complement_casm.correlations_in.shape",complement_casm.correlations_in.shape)
@@ -521,7 +521,10 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
             avg_out_of_sample_rmse_list.append(avg_out_of_sample_rmse)
             rms_out_of_sample_rmse = np.linalg.norm(np.array(non_weighted_rmse_list),ord=2)/np.sqrt(len(non_weighted_rmse_list))
             rms_out_of_sample_rmse_list.append(rms_out_of_sample_rmse)
-            print("mu_now, avg_out_of_sample_rmse, rms_out_of_sample_rmse is,",mu_now, avg_out_of_sample_rmse,rms_out_of_sample_rmse)
+            avg_num_non_zero_eci = np.mean(num_non_zero_eci_list)
+            avg_num_non_zero_eci_list.append(avg_num_non_zero_eci)
+
+            print("mu_now, avg_out_of_sample_rmse, rms_out_of_sample_rmse, avg_num_non_zero_eci is,",mu_now, avg_out_of_sample_rmse,rms_out_of_sample_rmse, avg_num_non_zero_eci)
 
             if (debug_now):
                 print("in case it fails in the future, let's print temporary results")
@@ -533,9 +536,9 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
         print("after all the iterations, let's print mu and avg_out_of_sample_rmse")
 
 
-        print("mu     cv_score(avg_oos_rmse)    another_cv_score(avg_oos_rmse)")
-        for mu_print,avg_print,rms_print in zip(mus,avg_out_of_sample_rmse_list,rms_out_of_sample_rmse_list):
-            print(mu_print," ",avg_print," ",rms_print)
+        print("mu     cv_score(avg_oos_rmse)    another_cv_score(rms_oos_rmse)    avg_num_non_zero_eci ")
+        for mu_print,avg_print,rms_print,avg_num_non_zero_eci_print in zip(mus,avg_out_of_sample_rmse_list,rms_out_of_sample_rmse_list,avg_num_non_zero_eci_list):
+            print(mu_print," ",avg_print," ",rms_print," ",avg_num_non_zero_eci_print)
 
         if (researchonfittingmodeWeightadjusting):
             print("additionally as we are doing  weight adjusting, let's check the following")
