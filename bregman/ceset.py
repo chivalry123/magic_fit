@@ -270,7 +270,7 @@ class CESet(object):
         if self.LinearScalingToUnweightHighEahStructs is not None:
             for i in range(len(self.structure_directory)):
                 if Eah[i] > self.LinearScalingToUnweightHighEahStructs:
-                    w[i] = w[i]*((self.LinearScalingToUnweightHighEahStructs/Eah)**2)
+                    w[i] = w[i]*((self.LinearScalingToUnweightHighEahStructs/Eah[i])**2)
 
         if give_hypothetical_structure_trivial_weights:
             for i in range(len(self.structure_directory)):
