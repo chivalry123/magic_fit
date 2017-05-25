@@ -43,7 +43,8 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                            researchonfittingmodeWeightadjusting,RemoveOutsideConcentration,MuPartition,weight_update_scheme,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
                            DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair,MIQP,
-                           UnCompressPairUptoDist,CompressAllTerms,MIQPGSPrsSolvingTime,MIQPNonGSPrsSolvingTime,L0L1,L0Hierarchy,L1Hierarchy,MaxNumClusts,L0mu):
+                           UnCompressPairUptoDist,CompressAllTerms,MIQPGSPrsSolvingTime,MIQPNonGSPrsSolvingTime,L0L1,L0Hierarchy,L1Hierarchy,MaxNumClusts,L0mu,
+                           LinearScalingToUnweightHighEahStructs):
 
     time_start = time.clock()
 
@@ -56,7 +57,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                    SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis,
                    CompressFirstPair=CompressFirstPair,UnCompressPairUptoDist=UnCompressPairUptoDist,CompressAllTerms=CompressAllTerms,
                    MIQPGSPrsSolvingTime=MIQPGSPrsSolvingTime,MIQPNonGSPrsSolvingTime=MIQPNonGSPrsSolvingTime,L0L1=L0L1,
-                   L0Hierarchy=L0Hierarchy,L1Hierarchy=L1Hierarchy,MaxNumClusts=MaxNumClusts,L0mu=L0mu)
+                   L0Hierarchy=L0Hierarchy,L1Hierarchy=L1Hierarchy,MaxNumClusts=MaxNumClusts,L0mu=L0mu,LinearScalingToUnweightHighEahStructs=LinearScalingToUnweightHighEahStructs)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -1016,6 +1017,12 @@ if (__name__ == "__main__"):
         default=None,
         type=float)
 
+    parser.add_argument(
+        "--LinearScalingToUnweightHighEahStructs",
+        help="use linear scaling to give structures with higher Eah lower weights w_i = w_i * (Eah/the_const)^2"
+             "although you see that it seems to be quadratic, but the definition of this code is actually linear ",
+        default=None,
+        type=float)
 
 
 
@@ -1102,5 +1109,6 @@ if (__name__ == "__main__"):
                            L0Hierarchy=args.L0Hierarchy,
                            L1Hierarchy=args.L1Hierarchy,
                            MaxNumClusts=args.MaxNumClusts,
-                           L0mu=args.L0mu)
+                           L0mu=args.L0mu,
+                           LinearScalingToUnweightHighEahStructs=args.LinearScalingToUnweightHighEahStructs)
 

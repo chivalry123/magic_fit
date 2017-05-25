@@ -267,6 +267,11 @@ class CESet(object):
         if bias_high_energy is not None:
             w[:] = np.where(Eah > bias_high_energy, w*high_energy_bias, w)
 
+        if self.LinearScalingToUnweightHighEahStructs is not None:
+            for i in range(len(self.structure_directory)):
+                if Eah[i] > self.LinearScalingToUnweightHighEahStructs:
+                    w[i] = w[i]*((self.LinearScalingToUnweightHighEahStructs/Eah)**2)
+
         if give_hypothetical_structure_trivial_weights:
             for i in range(len(self.structure_directory)):
                 if "enum-hypo-" in self.structure_directory[i]:
