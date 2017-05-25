@@ -70,9 +70,9 @@ class CESet(object):
         random.seed(42)
         self.already_compute_special_decomposition_data=False
         solvers.options['show_progress'] = False
-        solvers.options['abstol'] = 1e-12
-        solvers.options['reltol'] = 1e-10
-        solvers.options['feastol'] = 1e-12
+        # solvers.options['abstol'] = 1e-12
+        # solvers.options['reltol'] = 1e-10
+        solvers.options['feastol'] = 1e-14
         self.already_compute_decomposition_data=False
         self.energy_in = energy
         self.energy_shift = energy_shift
