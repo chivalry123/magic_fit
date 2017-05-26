@@ -44,7 +44,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                             MuStart,MuEnd,ReDefineFormE,AbsoluteErrorConstraintOnHull,DiffFocus,
                            DiffFocusWeight,SpecializedCvPengHaoGS,DiffFocusName,SmallErrorOnInequality,OnlyKeppEcis,CompressFirstPair,MIQP,
                            UnCompressPairUptoDist,CompressAllTerms,MIQPGSPrsSolvingTime,MIQPNonGSPrsSolvingTime,L0L1,L0Hierarchy,L1Hierarchy,MaxNumClusts,L0mu,
-                           LinearScalingToUnweightHighEahStructs):
+                           LinearScalingToUnweightHighEahStructs,ExpScalingToUnweightHighEahStructs):
 
     time_start = time.clock()
 
@@ -57,7 +57,8 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                    SmallErrorOnInequality=SmallErrorOnInequality,OnlyKeppEcis=OnlyKeppEcis,
                    CompressFirstPair=CompressFirstPair,UnCompressPairUptoDist=UnCompressPairUptoDist,CompressAllTerms=CompressAllTerms,
                    MIQPGSPrsSolvingTime=MIQPGSPrsSolvingTime,MIQPNonGSPrsSolvingTime=MIQPNonGSPrsSolvingTime,L0L1=L0L1,
-                   L0Hierarchy=L0Hierarchy,L1Hierarchy=L1Hierarchy,MaxNumClusts=MaxNumClusts,L0mu=L0mu,LinearScalingToUnweightHighEahStructs=LinearScalingToUnweightHighEahStructs)
+                   L0Hierarchy=L0Hierarchy,L1Hierarchy=L1Hierarchy,MaxNumClusts=MaxNumClusts,L0mu=L0mu,LinearScalingToUnweightHighEahStructs=LinearScalingToUnweightHighEahStructs,
+                   ExpScalingToUnweightHighEahStructs=ExpScalingToUnweightHighEahStructs)
     casm.add_concentration_min_max(concentrationmin,concentrationmax)
     casm.decide_valid_lists()
 
@@ -413,6 +414,7 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
         mus = list(np.logspace(log(min_mu,10), log(max_mu,10), MuPartition))
         avg_out_of_sample_rmse_list=[]
         rms_out_of_sample_rmse_list=[]
+        weighted_rms_out_of_sample_rmse_list=[]
         avg_num_non_zero_eci_list=[]
         preservation_succeed=[]
 
@@ -503,6 +505,8 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
                 # print("complement_casm.ecis ",complement_casm.ecis)
                 # print("E_all is ",E_all)
                 print("rmse_no_hypo_no_weight for this sub-partition i",i," is ",rmse_no_hypo_no_weight)
+                print("rmse_no_hypo_weighted for this sub-partition i",i," is ",rmse_no_hypo_weighted)
+
                 # print("finish debugging message")
 
                 # print ("without GS preservation")
@@ -522,10 +526,14 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
             avg_out_of_sample_rmse_list.append(avg_out_of_sample_rmse)
             rms_out_of_sample_rmse = np.linalg.norm(np.array(non_weighted_rmse_list),ord=2)/np.sqrt(len(non_weighted_rmse_list))
             rms_out_of_sample_rmse_list.append(rms_out_of_sample_rmse)
+            weighted_rms_out_of_sample_rmse = np.linalg.norm(np.array(weighted_rmse_list),ord=2)/np.sqrt(len(weighted_rmse_list))
+            weighted_rms_out_of_sample_rmse_list.append(weighted_rms_out_of_sample_rmse)
+
             avg_num_non_zero_eci = np.mean(num_non_zero_eci_list)
             avg_num_non_zero_eci_list.append(avg_num_non_zero_eci)
 
-            print("mu_now, avg_out_of_sample_rmse, rms_out_of_sample_rmse, avg_num_non_zero_eci is,",mu_now, avg_out_of_sample_rmse,rms_out_of_sample_rmse, avg_num_non_zero_eci)
+            print("mu_now, avg_out_of_sample_rmse, rms_out_of_sample_rmse, weighted_rms_out_of_sample_rmse,avg_num_non_zero_eci is,",
+                  mu_now, avg_out_of_sample_rmse,rms_out_of_sample_rmse, weighted_rms_out_of_sample_rmse,avg_num_non_zero_eci)
 
             if (debug_now):
                 print("in case it fails in the future, let's print temporary results")
@@ -538,8 +546,8 @@ def compressive_sensing_CE(args,energy_file, corr_in_file, eci_in_file,
 
 
         print("mu     cv_score(avg_oos_rmse)    another_cv_score(rms_oos_rmse)    avg_num_non_zero_eci ")
-        for mu_print,avg_print,rms_print,avg_num_non_zero_eci_print in zip(mus,avg_out_of_sample_rmse_list,rms_out_of_sample_rmse_list,avg_num_non_zero_eci_list):
-            print(mu_print," ",avg_print," ",rms_print," ",avg_num_non_zero_eci_print)
+        for mu_print,avg_print,rms_print,weighted_rms_print,avg_num_non_zero_eci_print in zip(mus,avg_out_of_sample_rmse_list,rms_out_of_sample_rmse_list,weighted_rms_out_of_sample_rmse_list,avg_num_non_zero_eci_list):
+            print(mu_print," ",avg_print," ",rms_print," ",weighted_rms_print," ",avg_num_non_zero_eci_print)
 
         if (researchonfittingmodeWeightadjusting):
             print("additionally as we are doing  weight adjusting, let's check the following")
@@ -1024,6 +1032,14 @@ if (__name__ == "__main__"):
         default=None,
         type=float)
 
+    parser.add_argument(
+        "--ExpScalingToUnweightHighEahStructs",
+        help="use exponential scaling to give structures with higher Eah lower weights w_i = w_i * Exp(-Eah/the_const)"
+             "If assumed room temperature, the_const should be 0.01 ",
+        default=None,
+        type=float)
+
+
 
 
     args = parser.parse_args()
@@ -1110,5 +1126,6 @@ if (__name__ == "__main__"):
                            L1Hierarchy=args.L1Hierarchy,
                            MaxNumClusts=args.MaxNumClusts,
                            L0mu=args.L0mu,
-                           LinearScalingToUnweightHighEahStructs=args.LinearScalingToUnweightHighEahStructs)
+                           LinearScalingToUnweightHighEahStructs=args.LinearScalingToUnweightHighEahStructs,
+                           ExpScalingToUnweightHighEahStructs=args.ExpScalingToUnweightHighEahStructs)
 
