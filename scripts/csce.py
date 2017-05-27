@@ -1034,8 +1034,9 @@ if (__name__ == "__main__"):
 
     parser.add_argument(
         "--ExpScalingToUnweightHighEahStructs",
-        help="use exponential scaling to give structures with higher Eah lower weights w_i = w_i * Exp(-Eah/the_const)"
-             "If assumed room temperature, the_const should be 0.01 ",
+        help="Note! this is a place holder only, I have not implemented anything with this feature"
+            "use exponential scaling to give structures with higher Eah lower weights w_i = w_i * Exp(-Eah/the_const)"
+             "If assumed room temperature, the_const should be 0.01  ",
         default=None,
         type=float)
 

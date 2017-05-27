@@ -37,7 +37,8 @@ class CASMSet(CESet):
                  detect_redundant_clusters=True, pca=False,DiffFocus=None,DiffFocusWeight=None,DiffFocusName=None,
                  SmallErrorOnInequality=None,OnlyKeppEcis=None,CompressFirstPair=None,UnCompressPairUptoDist=None,
                  CompressAllTerms=None,MIQPGSPrsSolvingTime=None,MIQPNonGSPrsSolvingTime=None,L0L1=None,
-                 L0Hierarchy=None,L1Hierarchy=None,MaxNumClusts=None,L0mu=None,LinearScalingToUnweightHighEahStructs=None):
+                 L0Hierarchy=None,L1Hierarchy=None,MaxNumClusts=None,L0mu=None,LinearScalingToUnweightHighEahStructs=None,
+                 ExpScalingToUnweightHighEahStructs=None):
 
         self.LinearScalingToUnweightHighEahStructs = LinearScalingToUnweightHighEahStructs
         self.L0mu = L0mu
