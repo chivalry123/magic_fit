@@ -358,10 +358,13 @@ class CASMSet_WX_create_sub(CESet):
         # print("converted diff_foscus_lists_of_lists is")
         # print(self.diff_foscus_lists_of_lists)
 
-
+        # for i,j in enumerate(indexes_to_use):
         super(CASMSet_WX_create_sub, self).__init__(
             energy, energy_shift, correlations, directories,
             concentrations=concentrations, pca=pca)
+
+        self.structure_weight = [grand_casm.structure_weight[j] for j in indexes_to_use]
+        self._apply_structure_weights()
 
 
     def map_lists_of_lists_to_new_list_of_list(self,indexes_to_use,list_of_list_now):
