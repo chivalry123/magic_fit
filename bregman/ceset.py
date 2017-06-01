@@ -2179,8 +2179,8 @@ class CESet(object):
         hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-8)[0]
 
         hull_idx_dirs = [self.structure_directory[i] for i in hull_idx_another_approach]
-        print ("in compute_hull_idx, the identified hull is ")
-        print (hull_idx_dirs)
+        # print ("in compute_hull_idx, the identified hull is ")
+        # print (hull_idx_dirs)
 
         self.hull_idx = hull_idx_another_approach
 
