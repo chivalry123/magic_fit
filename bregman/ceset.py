@@ -1958,14 +1958,16 @@ class CESet(object):
             self.matrix_type = "L1nonGS"
 
         def is_pos_semi_def(x):
-           return np.all(np.linalg.eigvals(x) >= 0)
+            eigen_values = np.linalg.eigvals(x)
+            print ("eigen_values is ",eigen_values)
+            return np.all(eigen_values >= 0)
 
         is_P_psd = is_pos_semi_def(P)
         print ("is_P_psd ",is_P_psd)
         if is_P_psd == False:
             print ("P is")
             print (P)
-        
+
         self.P = P
         self.q = q
         self.G_3 = G_3
