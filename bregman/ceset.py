@@ -1957,9 +1957,13 @@ class CESet(object):
         elif not MIQP and not activate_GS_preservation:
             self.matrix_type = "L1nonGS"
 
+        import numpy
+        numpy.set_printoptions(threshold='nan')
         def is_pos_semi_def(x):
             eigen_values = np.linalg.eigvals(x)
             print ("eigen_values is ",eigen_values)
+            print ("is ",eigen_values[0]," >=0 ",eigen_values[0]>=0)
+            print ("is ",eigen_values[-1]," >=0 ",eigen_values[-1]>=0)
             return np.all(eigen_values >= 0)
 
         is_P_psd = is_pos_semi_def(P)
