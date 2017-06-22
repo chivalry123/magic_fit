@@ -1680,6 +1680,7 @@ class CESet(object):
         model.setParam(gurobi.GRB.Param.OutputFlag, True)
         model.setParam(gurobi.GRB.Param.Heuristics, heuristics)
         model.setParam(gurobi.GRB.Param.MIPFocus, 1)
+        model.setParam(gurobi.GRB.Param.PSDTol, 1e-2)
 
         # model.tune()
 
@@ -1957,20 +1958,22 @@ class CESet(object):
         elif not MIQP and not activate_GS_preservation:
             self.matrix_type = "L1nonGS"
 
-        import numpy
-        numpy.set_printoptions(threshold='nan')
-        def is_pos_semi_def(x):
-            eigen_values = np.linalg.eigvals(x)
-            print ("eigen_values is ",eigen_values)
-            print ("is ",eigen_values[0]," >=0 ",eigen_values[0]>=0)
-            print ("is ",eigen_values[-1]," >=0 ",eigen_values[-1]>=0)
-            return np.all(eigen_values >= 0)
-
-        is_P_psd = is_pos_semi_def(P)
-        print ("is_P_psd ",is_P_psd)
-        if is_P_psd == False:
-            print ("P is")
-            print (P)
+        # # import numpy
+        # # numpy.set_printoptions(threshold='nan')
+        # def is_pos_semi_def(x):
+        #     eigen_values = np.linalg.eigvals(x)
+        #     # print ("eigen_values is ",eigen_values)
+        #     print ("violating eigenvalues are eigen_values[np.where(eigen_values<0)]")
+        #     # print ("is ",eigen_values[0]," >=0 ",eigen_values[0]>=0)
+        #     # print ("is ",eigen_values[-1]," >=0 ",eigen_values[-1]>=0)
+        #     return np.all(eigen_values >= 0)
+        #
+        # is_P_psd = is_pos_semi_def(P)
+        # print ("is_P_psd ",is_P_psd)
+        #
+        # # if is_P_psd == False:
+        # #     print ("P is")
+        # #     print (P)
 
         self.P = P
         self.q = q
