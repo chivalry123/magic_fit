@@ -1957,6 +1957,15 @@ class CESet(object):
         elif not MIQP and not activate_GS_preservation:
             self.matrix_type = "L1nonGS"
 
+        def is_pos_semi_def(x):
+           return np.all(np.linalg.eigvals(x) >= 0)
+
+        is_P_psd = is_pos_semi_def(P)
+        print ("is_P_psd ",is_P_psd)
+        if is_P_psd == False:
+            print ("P is")
+            print (P)
+        
         self.P = P
         self.q = q
         self.G_3 = G_3
