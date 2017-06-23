@@ -1512,10 +1512,10 @@ class CESet(object):
         h_3_without_preserve_GS = self.h_3_without_preserve_GS
 
 
-        print ("G_3.shape is ",G_3.shape)
-        print("h_3.shape is ",h_3.shape)
-        print ("G3_without_preserve_GS.shape ",G3_without_preserve_GS.shape)
-        print ("h_3_without_preserve_GS.shape ",h_3_without_preserve_GS.shape)
+        # print ("G_3.shape is ",G_3.shape)
+        # print("h_3.shape is ",h_3.shape)
+        # print ("G3_without_preserve_GS.shape ",G3_without_preserve_GS.shape)
+        # print ("h_3_without_preserve_GS.shape ",h_3_without_preserve_GS.shape)
 
         P_matrix=matrix(P)
         q_matrix=matrix(q)
