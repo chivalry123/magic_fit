@@ -1512,6 +1512,10 @@ class CESet(object):
         h_3_without_preserve_GS = self.h_3_without_preserve_GS
 
 
+        print ("G_3.shape is ",G_3.shape)
+        print("h_3.shape is ",h_3.shape)
+        print ("G3_without_preserve_GS.shape ",G3_without_preserve_GS.shape)
+        print ("h_3_without_preserve_GS.shape ",h_3_without_preserve_GS.shape)
 
         P_matrix=matrix(P)
         q_matrix=matrix(q)
@@ -1842,8 +1846,12 @@ class CESet(object):
 
 
             decomposition_data=self.compute_decomposition_data()
+
+            # print ("decomposition_data is ",decomposition_data)
+
             special_decomposition_data=self.compute_special_decomposition_data()
 
+            # print ("special_decomposition_data is ",special_decomposition_data)
 
 
 
@@ -2122,7 +2130,8 @@ class CESet(object):
             invalid_index_due_to_conc_min=self.invalid_index_due_to_conc_min
             invalid_index_due_to_conc_max=self.invalid_index_due_to_conc_max
 
-            hull_idx=np.where(np.array( self.energy_above_hull_in )<1e-4)[0]
+            # hull_idx=np.where(np.array( self.energy_above_hull_in )<1e-4)[0]
+            hull_idx=self.hull_idx
             hull_conc=[self.concentrations[i] for i in hull_idx]
             hull_form_e=[self.formation_energies_in[i] for i in hull_idx]
             hull_e_above_hull_in=[self.energy_above_hull_in[i] for i in hull_idx]
@@ -2197,8 +2206,15 @@ class CESet(object):
         hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-8)[0]
 
         hull_idx_dirs = [self.structure_directory[i] for i in hull_idx_another_approach]
+        hull_idx_concentrations = [self.concentrations[i] for i in hull_idx_another_approach]
+
         # print ("in compute_hull_idx, the identified hull is ")
         # print (hull_idx_dirs)
+        # print ("in compute_hull_idx, the hull_idx_concentrations is ")
+        # print(hull_idx_concentrations)
+        # print ("hull_idx_another_approach, ",hull_idx_another_approach)
+        # print ("zip(hull_idx_concentrations,hull_idx_another_approach).sort() ",zip(hull_idx_concentrations,hull_idx_another_approach))
+        # print ("debugging now  self.energy_above_hull_in is ",self.energy_above_hull_in)
 
         self.hull_idx = hull_idx_another_approach
 
