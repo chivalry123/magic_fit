@@ -106,14 +106,20 @@ class CESet(object):
         # print(self.energy_shift)
 
         E = self.energy_in + self.energy_shift
+        # print ("at 109 line!!!")
         (self.formation_energies_in, self.formation_energy_basis_in,
          self.formation_energy_levels_in
          ) = self.compute_formation_energies(
              self.concentrations, E, return_reference=True)
-        if self.formation_energy_basis_in is not None:
+
+        ##try to avoid using the formation energy~
+        # if self.formation_energy_basis_in is not None:
+        if True:
             (self.hull_in, self.energy_above_hull_in
              ) = self.compute_convex_hull(self.concentrations,
                                           self.formation_energies_in)
+            # print ("after first compute_convex_hull, self.hull_in, self.energy_above_hull_in ")
+            # print (self.hull_in, self.energy_above_hull_in)
         # Wenxuan just to make the hull forgetting structs with positive formation E
 
             # print ("first time done")
@@ -828,8 +834,10 @@ class CESet(object):
           is returned
 
         """
+        # print ("inside compute_formation_energies")
         if references is None:
             references = np.identity(self.dimension + 1)[:, :-1].tolist()
+        # print ("at 839 reference = ",references)
 
         if reference_energies is not None:
             E_basis = np.array(reference_energies)
@@ -843,12 +851,12 @@ class CESet(object):
                     i = np.linalg.norm(np.array(concentrations)
                                        - np.array(c), axis=1).argmin()
                     conc = concentrations[i]
-                    print(" No configuration found with "
-                          "concentrations: " + (
-                              self.dimension*"{} ").format(*c))
-                    print(" Using instead reference "
-                          "concentrations: " + (
-                              self.dimension*"{} ").format(*conc))
+                    # print(" No configuration found with "
+                    #       "concentrations: " + (
+                    #           self.dimension*"{} ").format(*c))
+                    # print(" Using instead reference "
+                    #       "concentrations: " + (
+                    #           self.dimension*"{} ").format(*conc))
                     references[k] = conc
                 idx = np.array([j for j in range(len(concentrations))
                                 if concentrations[j] == conc])
@@ -866,8 +874,11 @@ class CESet(object):
             basis_inv = np.linalg.inv(basis.T)
         except np.linalg.linalg.LinAlgError:
             basis_inv = None
-            print(" Formation energies could not be computed.")
-            print(" Do all configurations have the same concentrations?")
+            # print(" Formation energies could not be computed.")
+            # print(" Do all configurations have the same concentrations?")
+            print ("Wenxuan note: when you see this lines, the formation energy could not be computed for some reason"
+                   ", the formation energy is simply the DFT energy afterwards, it should be corrected one day"
+                   "but it should not harm for now...")
             formation_energies = energies[:]
             references = None
             E_basis = None
@@ -1844,6 +1855,11 @@ class CESet(object):
             invalid_index_due_to_conc_min=self.invalid_index_due_to_conc_min
             invalid_index_due_to_conc_max=self.invalid_index_due_to_conc_max
 
+            # print ("self.conc is")
+            # pprint(self.concentrations)
+            # print (len(self.concentrations))
+            # print ("self.energy_in is",self.energy_in,len(self.energy_in))
+
 
             decomposition_data=self.compute_decomposition_data()
 
@@ -1892,7 +1908,9 @@ class CESet(object):
                     array_now += self.correlations_in[i]
                     G_3_new_line=np.concatenate((array_now,np.zeros(self.N_corr)))
                     G_3_new_line.shape=(1,2*self.N_corr)
+
                     G_3=np.concatenate((G_3,G_3_new_line),axis=0)
+
                     G_3_GS_preservation_part = np.concatenate((G_3_GS_preservation_part,G_3_new_line),axis=0)
 
                     small_error=np.array(-small_error_global) # from -4 to -3
@@ -2046,8 +2064,10 @@ class CESet(object):
 
 
     def compute_decomposition_data(self,repeat_calculation=False):
-
         if (self.already_compute_decomposition_data==False) or repeat_calculation:
+
+            # print ("inside the if of compute_decomposition_data ")
+
             valid_index=self.valid_index
             valid_index_only_consider_conc=self.valid_index_only_consider_conc
             invalid_index_due_to_conc_min=self.invalid_index_due_to_conc_min
@@ -2068,6 +2088,8 @@ class CESet(object):
             decomposition_data = {}
             self.dimension
 
+            # print ("valid_index_only_consider_conc is ",valid_index_only_consider_conc)
+            # print ("hull_idx is ",hull_idx)
             for i in valid_index_only_consider_conc:
                 if i not in hull_idx:
                     decomposition_now = {}
@@ -2183,6 +2205,8 @@ class CESet(object):
                     obj += float(hull_form_e[j])*coeff[j]
 
                 lp = op(obj,constr_list)
+
+
                 lp.solve()
 
                 if lp.status == "optimal":
@@ -2203,8 +2227,9 @@ class CESet(object):
         return self.special_decomposition_data
 
     def compute_hull_idx(self):
-        hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-8)[0]
 
+        # print ("self.energy_above_hull_in ",self.energy_above_hull_in)
+        hull_idx_another_approach=np.where(np.array( self.energy_above_hull_in )<1e-8)[0]
         hull_idx_dirs = [self.structure_directory[i] for i in hull_idx_another_approach]
         hull_idx_concentrations = [self.concentrations[i] for i in hull_idx_another_approach]
 
